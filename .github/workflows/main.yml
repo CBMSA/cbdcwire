@@ -15,7 +15,7 @@ jobs:
       - name: Upload files via SFTP
         uses: easingthemes/ssh-deploy@main
         env:
-          SSH_USER: "sadc_cbdc"
+          SSH_USER: "cbdcwire"
           SSH_HOST: "https://www.mcbsresbank.com/internet-banking-and-cbdc/cbdc"
           SSH_KEY: "${{ secrets.SSH_PRIVATE_KEY }}"
-          REMOTE_PATH: "/y
+          REMOTE_PATH: "/yar/www/html"
