@@ -16,6 +16,6 @@ jobs:
         uses: easingthemes/ssh-deploy@main
         env:
           SSH_USER: "cbdcwire"
-          SSH_HOST: "https://www.mcbsresbank.com/internet-banking-and-cbdc/cbdc"
+          SSH_HOST: "www.mcbsresbank.com"  # Just the hostname
           SSH_KEY: "${{ secrets.SSH_PRIVATE_KEY }}"
           REMOTE_PATH: "/yar/www/html"
