@@ -11,7 +11,7 @@ CBDCWire is a project designed to ...
 2. Open `index.html` in your browser.
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE) file for details.
 
 ## Live Demo
 [Visit Live Project](https://CBMSA.github.io/cbdcwire/)
