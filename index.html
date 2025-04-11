@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin CBDC Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.4/web3.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f4; padding: 20px; }
+        h1 { color: #333; }
+        button { padding: 10px 20px; margin: 10px; border: none; cursor: pointer; background-color: #28a745; color: white; font-size: 16px; border-radius: 5px; }
+        button:hover { background-color: #218838; }
+        input { padding: 8px; width: 300px; margin: 10px; border-radius: 5px; border: 1px solid #ccc; }
+        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); max-width: 500px; margin: auto; }
+    </style>
+</head>
+<body>
+
+    <center>
+        <h1>SADC CBDC</h1>
+        </center>
+        <p><b><big><i>South African Reserve Bank</big></
+            b><br />
+            <center>
+               Ensuring sustainable economic growth through Digital Payments <i/></p>
+               <div id="menu" align="middle">
+                <a href="/C:/Users/BLESSING%20FARAI%20MUNER/Desktop/SADC%20CBDC.html">Home</a> |
+                <a href="/about/contact_us.htm">Contact</a> |
+                <a href="/about/index.htm">About</a> |
+                <a href="C:/Users/BLESSING%20FARAI%20MUNER/Desktop/Admin%20Portal.html">Admin Portal</a> |
+                <a href="file:///C:/Users/BLESSING%20FARAI%20MUNER/Desktop/cbdc%20web3.html">CBDC</a>
+               </div> 
+            </center>
+            
+
+    <h1>Admin CBDC Dashboard</h1>
+
+    <div class="container">
+        <h3>Connect Wallet</h3>
+        <button onclick="connectWallet()">Connect MetaMask</button>
+        <p id="walletAddress">Not connected</p>
+
+        <h3>Create CBDC</h3>
+        <input type="text" id="mintAddress" placeholder="Enter recipient address">
+        <input type="number" id="mintAmount" placeholder="Enter amount">
+        <button onclick="mintCBDC()">Mint</button>
+
+        <h3>Burn CBDC</h3>
+        <input type="number" id="burnAmount" placeholder="Enter amount to burn">
+        <button onclick="burnCBDC()">Burn</button>
+
+        <h3>Freeze/Unfreeze Account</h3>
+        <input type="text" id="freezeAddress" placeholder="Enter account address">
+        <button onclick="freezeAccount(true)">Freeze</button>
+        <button onclick="freezeAccount(false)">Unfreeze</button>
+
+        <h3>Send Payment to Commercial Bank</h3>
+        <input type="text" id="bankAddress" placeholder="Enter bank address">
+        <input type="number" id="bankAmount" placeholder="Enter amount">
+        <button onclick="sendToBank()">Send</button>
+    </div>
+
+    <script>
+        let web3;
+        let cbdcContract;
+        let userAccount;
+
+        const contractAddress = "YOUR_CONTRACT_ADDRESS"; // Replace with your deployed contract
+        const contractABI = [
+            // Replace with your contract ABI from Remix
+        ];
+
+        async function connectWallet() {
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                await window.ethereum.request({ method: "eth_requestAccounts" });
+                const accounts = await web3.eth.getAccounts();
+                userAccount = accounts[0];
+                document.getElementById("walletAddress").innerText = "Connected: " + userAccount;
+
+                cbdcContract = new web3.eth.Contract(contractABI, contractAddress);
+            } else {
+                alert("Please install MetaMask!");
+            }
+        }
+
+        async function mintCBDC() {
+            const to = document.getElementById("mintAddress").value;
+            const amount = document.getElementById("mintAmount").value;
+
+            if (to && amount) {
+                await cbdcContract.methods.mintCBDC(to, web3.utils.toWei(amount, "ether")).send({ from: userAccount });
+                alert("Minted " + amount + " CBDC to " + to);
+            } else {
+                alert("Please enter recipient address and amount");
+            }
+        }
+
+        async function burnCBDC() {
+            const amount = document.getElementById("burnAmount").value;
+
+            if (amount) {
+                await cbdcContract.methods.burnCBDC(web3.utils.toWei(amount, "ether")).send({ from: userAccount });
+                alert("Burned " + amount + " CBDC");
+            } else {
+                alert("Please enter an amount to burn");
+            }
+        }
+
+        async function freezeAccount(freeze) {
+            const account = document.getElementById("freezeAddress").value;
+
+            if (account) {
+                await cbdcContract.methods.freezeAccount(account, freeze).send({ from: userAccount });
+                alert(freeze ? "Account frozen" : "Account unfrozen");
+            } else {
+                alert("Please enter an account address");
+            }
+        }
+
+        async function sendToBank() {
+            const bank = document.getElementById("bankAddress").value;
+            const amount = document.getElementById("bankAmount").value;
+
+            if (bank && amount) {
+                await cbdcContract.methods.transferToBank(bank, web3.utils.toWei(amount, "ether")).send({ from: userAccount });
+                alert("Sent " + amount + " CBDC to bank " + bank);
+            } else {
+                alert("Please enter bank address and amount");
+            }
+        }
+    </script>
+
+</body>
+</html>
+
+   </style>
+</head>
+<body>
+    <left>
+        <h1>CBDC </h1>
+    </left>
+        <p><b><big><i>South African Reserve Bank</big></
+            b><br />
+            <left>
+               #Leave no one behind<i/></p>
+               <div id="contact_us" align="left">
+                <a href=>370 Helen Joseph Street</a> |<br><br/>
+                <a href=>Pretoria</a> | <br><br/>
+                <a href=>Gauteng</a> |<br><br/>
+                <a href=>"cbdc@mcbsresbak.com"> CBDC Helpline</a> |<br><br/>
+                <a href="https://www.resbank.co.za">South African Reserve bank</a> |<br><br/>
+               </div> 
+            </left>
+            
+    <header>
+        <h1>  SARB CBDC 2025</h1>
+    </header>  
