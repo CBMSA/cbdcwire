@@ -8,7 +8,7 @@ CBDCWire is a project designed to ...
 
 ## Getting Started
 1. Clone the repository: `git clone https://github.com/CBMSA/cbdcwire.git`
-2. Open `[index.html](https://cbmsa.github.io/cbdcwire/)` in your browser.
+2. Open `index.html` in your browser.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE) file for details.
