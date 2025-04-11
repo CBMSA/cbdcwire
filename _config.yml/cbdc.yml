@@ -1,13 +1,13 @@
 # Site settings
-title: Your Site Title
-description: A brief description of your site.
+title: SADC CBDC
+description:SADC COUNTRIES CBDC
 baseurl: "" # The subpath of your site, e.g., /blog (leave empty for root).
-url: "https://yourwebsite.com" # The base URL of your site.
+url: "https://cbmsa.github.io/cbdcwire/)`" # The base URL of your site.
 
 # Author settings
-author: 
-  name: Your Name
-  email: your.email@example.com
+author: CBMSA
+  name: B F MUNERI 
+  email: cbdc@mcbsresbank.com
 
 # Build settings
 markdown: kramdown
