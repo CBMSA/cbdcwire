@@ -1,0 +1,34 @@
+
+CREATE TABLE cbdc_transactions (
+    id NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    type VARCHAR2(50),
+    recipient VARCHAR2(50),
+    bank VARCHAR2(50),
+    amount NUMBER,
+    status VARCHAR2(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+---
+
+3. Oracle Blockchain (Hyperledger Fabric) Smart Contract (cbdcContract.js)
+
+'use strict';
+
+const { Contract } = require('fabric-contract-api');
+
+class CBDCContract extends Contract {
+    async sendToBank(ctx, bank, amount) {
+        let cbdcRecord = {
+            type: 'SEND_TO_BANK',
+            bank,
+            amount,
+            timestamp: new Date().toISOString(),
+        };
+        await ctx.stub.putState(bank, Buffer.from(JSON.stringify(cbdcRecord)));
+        return JSON.stringify(cbdcRecord);
+    }
+}
+
+module.exports = CBDCContract;
