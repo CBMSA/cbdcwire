@@ -10,9 +10,7 @@ CREATE TABLE cbdc_transactions (
 );
 
 
----
-
-3. Oracle Blockchain (Hyperledger Fabric) Smart Contract (cbdcContract.js)
+Oracle Blockchain (Hyperledger Fabric) Smart Contract (cbdcContract.js)
 
 'use strict';
 
