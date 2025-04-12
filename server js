@@ -1,0 +1,107 @@
+
+require("dotenv").config();
+const express = require("express");
+const Web3 = require("web3");
+const oracledb = require("oracledb");
+const { Gateway, Wallets } = require("fabric-network");
+const path = require("path");
+const fs = require("fs");
+require("newrelic");
+
+const app = express();
+app.use(express.json());
+
+const PORT = process.env.PORT || 3000;
+const ADMIN_ADDRESS = "0x9Ae7aE53c0aF779fFB979A53fA84709fCF8A9c9e";
+const CONTRACT_ADDRESS = process.env.SMART_CONTRACT_ADDRESS;
+const ORACLE_DB_CONFIG = {
+    user: process.env.ORACLE_DB_USER,
+    password: process.env.ORACLE_DB_PASSWORD,
+    connectString: process.env.ORACLE_DB_CONNECT_STRING,
+};
+
+// Connect to Ethereum Smart Contract
+const web3 = new Web3(process.env.BLOCKCHAIN_RPC_URL);
+const contractABI = JSON.parse(fs.readFileSync("contractABI.json"));
+const contract = new web3.eth.Contract(contractABI, CONTRACT_ADDRESS);
+
+// Connect to Oracle Blockchain Platform
+const ccpPath = path.resolve(__dirname, "connection.json"); // Oracle Blockchain connection profile
+const walletPath = path.join(process.cwd(), "wallet");
+
+async function connectToFabric() {
+    const wallet = await Wallets.newFileSystemWallet(walletPath);
+    const gateway = new Gateway();
+    await gateway.connect(ccpPath, { wallet, identity: "admin", discovery: { enabled: true, asLocalhost: false } });
+    return gateway;
+}
+
+// API: Connect Wallet
+app.get("/connect", async (req, res) => {
+    try {
+        const accounts = await web3.eth.getAccounts();
+        res.json({ connected: accounts[0] });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API: Mint CBDC
+app.post("/mint", async (req, res) => {
+    const { recipient, amount } = req.body;
+    try {
+        const accounts = await web3.eth.getAccounts();
+        if (accounts[0].toLowerCase() !== ADMIN_ADDRESS.toLowerCase()) {
+            return res.status(403).json({ error: "Only admin can mint" });
+        }
+
+        await contract.methods.mint(recipient, amount).send({ from: accounts[0] });
+        
+        // Log transaction in Oracle DB
+        const connection = await oracledb.getConnection(ORACLE_DB_CONFIG);
+        await connection.execute(
+            `INSERT INTO cbdc_transactions (type, recipient, amount, status) VALUES ('MINT', :recipient, :amount, 'SUCCESS')`,
+            { recipient, amount }
+        );
+        await connection.commit();
+        await connection.close();
+
+        res.json({ message: "Minted successfully" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API: Send CBDC to Bank
+app.post("/sendToBank", async (req, res) => {
+    const { bank, amount } = req.body;
+    try {
+        const accounts = await web3.eth.getAccounts();
+        await contract.methods.sendToBank(bank, amount).send({ from: accounts[0] });
+
+        // Log in Oracle Blockchain
+        const gateway = await connectToFabric();
+        const network = await gateway.getNetwork("mychannel");
+        const contract = network.getContract("cbdcContract");
+        await contract.submitTransaction("SendToBank", bank, amount);
+        await gateway.disconnect();
+
+        // Log transaction in Oracle DB
+        const connection = await oracledb.getConnection(ORACLE_DB_CONFIG);
+        await connection.execute(
+            `INSERT INTO cbdc_transactions (type, bank, amount, status) VALUES ('SEND_TO_BANK', :bank, :amount, 'SUCCESS')`,
+            { bank, amount }
+        );
+        await connection.commit();
+        await connection.close();
+
+        res.json({ message: "Sent to bank successfully" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Start server
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
