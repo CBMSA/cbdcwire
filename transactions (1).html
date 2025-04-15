@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SADC CBDC Transfer</title>
+</head>
+<body>
+  <h1>CBDC Transfer</h1>
+  <form id="transferForm">
+    <label>Transfer Type:</label>
+    <select id="transferType">
+      <option value="wallet">CBDC Wallet (Phone)</option>
+      <option value="bank">Commercial Bank Account</option>
+      <option value="mukuru">Mukuru Account</option>
+    </select>
+    <input type="text" id="receiver" placeholder="Receiver (Phone or Account #)" required />
+    <input type="text" id="bankName" placeholder="Bank Name (if applicable)" />
+    <input type="number" id="amount" placeholder="Amount" required />
+    <select id="currency">
+      <option value="USD">USD</option>
+      <option value="ZAR">ZAR</option>
+      <option value="MWK">MWK</option>
+    </select>
+    <button type="submit">Send</button>
+  </form>
+  <script>
+    const phone = "sample_sender_phone"; // Placeholder
+
+    document.getElementById("transferForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const type = document.getElementById("transferType").value;
+      const receiver = document.getElementById("receiver").value;
+      const bankName = document.getElementById("bankName").value;
+      const amount = document.getElementById("amount").value;
+      const currency = document.getElementById("currency").value;
+
+      const res = await fetch('/api/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender_phone: phone,
+          receiver,
+          bank_name: bankName,
+          amount,
+          currency,
+          type
+        })
+      });
+
+      const result = await res.json();
+      alert(result.message);
+    });
+  </script>
+</body>
+</html>

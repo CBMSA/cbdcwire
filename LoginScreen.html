@@ -1,0 +1,118 @@
+
+<!-- LoginScreen.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SADC CBDC Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f6f9;
+      color: #2d3436;
+    }
+    header {
+      background-color: #003366;
+      color: white;
+      padding: 20px 40px;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+    }
+    nav {
+      background-color: #00509e;
+      padding: 10px 40px;
+      display: flex;
+      gap: 20px;
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px;
+    }
+    h2 {
+      color: #00509e;
+      margin-top: 40px;
+    }
+    ul {
+      margin-left: 20px;
+    }
+    .faq-section {
+      margin-top: 30px;
+    }
+    .faq-question {
+      font-weight: bold;
+      color: #2c3e50;
+      margin-top: 20px;
+    }
+    .faq-answer {
+      color: #636e72;
+      margin-bottom: 10px;
+    }
+    .cta {
+      background-color: #dfe6e9;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 30px;
+    }
+    .cta a {
+      display: inline-block;
+      background-color: #00509e;
+      color: white;
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+    footer {
+      background-color: #2d3436;
+      color: #b2bec3;
+      padding: 20px;
+      text-align: center;
+      font-size: 0.9em;
+    }
+    .highlight {
+      background: #e3f2fd;
+      border-left: 5px solid #1a73e8;
+      padding: 15px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>SADC Digital Currency – Official CBDC Portal</h1>
+  <p>Trusted Digital Currency for Southern Africa</p>
+</header>
+
+<nav>
+  <a href="#Home">Home.html</a>
+  <a href="#Registration">Registration Screen.html</a>
+  <a href="#Transactions">Transactions.html</a>
+  <a href="#faq">FAQs</a>
+  <a href="#help">Help</a>
+</nav>
+
+<div class="container">
+</head>
+<body>
+  <h2>Login to Your CBDC Wallet</h2>
+  <form action="/api/login" method="POST">
+    <label>Phone Number:</label><br>
+    <input type="tel" name="phone" required><br><br>
+    <label>Password:</label><br>
+    <input type="password" name="password" required><br><br>
+    <button type="submit">Login</button>
+  </form>
+</body>
+</html>
