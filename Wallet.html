@@ -1,0 +1,132 @@
+<!-- CBDC Blockchain Withdrawal Page with Balance Integration -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CBDC Blockchain Withdrawal</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-2xl shadow-lg">
+    <h1 class="text-2xl font-bold mb-6">Withdraw CBDC via Blockchain</h1>
+
+    <!-- Wallet and Balance Section -->
+    <div class="mb-6">
+      <button onclick="connectWallet()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">Connect Wallet</button>
+      <div id="walletAddress" class="mt-2 text-sm text-gray-700"></div>
+      <div id="accountBalance" class="mt-2 text-sm text-blue-700 font-bold"></div>
+    </div>
+
+    <!-- Withdrawal Method Selection -->
+    <div class="mb-6">
+      <label for="method" class="block text-gray-700 mb-2 font-semibold">Withdrawal Option:</label>
+      <select id="method" class="w-full p-3 border rounded-lg" onchange="toggleMethod()">
+        <option value="voucher">Voucher via Smart Contract</option>
+        <option value="bank">Send to Linked Blockchain Bank Account</option>
+      </select>
+    </div>
+
+    <!-- Voucher Withdrawal -->
+    <div id="voucher-form" class="space-y-4">
+      <label class="block font-semibold">Amount to Withdraw (CBDC):</label>
+      <input type="number" id="voucherAmount" class="w-full p-3 border rounded-lg" placeholder="e.g. 100">
+      <button onclick="withdrawVoucher()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Generate Blockchain Voucher</button>
+      <div id="voucherResult" class="mt-4 text-green-700 font-bold"></div>
+    </div>
+
+    <!-- Bank Transfer on Chain -->
+    <div id="bank-form" class="space-y-4 hidden">
+      <label class="block font-semibold">Blockchain Bank Address:</label>
+      <input type="text" id="bankAddress" class="w-full p-3 border rounded-lg" placeholder="0x123...">
+      <label class="block font-semibold">Amount (CBDC):</label>
+      <input type="number" id="bankAmount" class="w-full p-3 border rounded-lg" placeholder="e.g. 200">
+      <button onclick="sendToBlockchainBank()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Transfer CBDC</button>
+      <div id="bankResult" class="mt-4 text-green-700 font-bold"></div>
+    </div>
+  </div>
+
+  <script>
+    let web3;
+    let userAccount;
+    let tokenContract;
+
+    const tokenAddress = "0xYourCBDCTokenAddress"; // Replace with your CBDC token contract address
+    const tokenABI = [
+      {
+        "constant": true,
+        "inputs": [{"name": "_owner", "type": "address"}],
+        "name": "balanceOf",
+        "outputs": [{"name": "balance", "type": "uint256"}],
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {"name": "_to", "type": "address"},
+          {"name": "_value", "type": "uint256"}
+        ],
+        "name": "transfer",
+        "outputs": [{"name": "success", "type": "bool"}],
+        "type": "function"
+      }
+    ];
+
+    async function connectWallet() {
+      if (window.ethereum) {
+        web3 = new Web3(window.ethereum);
+        await window.ethereum.enable();
+        const accounts = await web3.eth.getAccounts();
+        userAccount = accounts[0];
+        document.getElementById("walletAddress").innerText = `Connected: ${userAccount}`;
+        tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
+        updateBalance();
+      } else {
+        alert("Please install MetaMask or Web3 wallet.");
+      }
+    }
+
+    async function updateBalance() {
+      const balance = await tokenContract.methods.balanceOf(userAccount).call();
+      const readable = web3.utils.fromWei(balance, 'ether');
+      document.getElementById("accountBalance").innerText = `CBDC Balance: ${readable}`;
+    }
+
+    function toggleMethod() {
+      const method = document.getElementById('method').value;
+      document.getElementById('voucher-form').style.display = method === 'voucher' ? 'block' : 'none';
+      document.getElementById('bank-form').style.display = method === 'bank' ? 'block' : 'none';
+    }
+
+    async function withdrawVoucher() {
+      const amount = document.getElementById('voucherAmount').value;
+      if (!amount || amount <= 0 || !userAccount) {
+        alert("Invalid input or wallet not connected.");
+        return;
+      }
+      const voucherCode = web3.utils.sha3(userAccount + Date.now());
+      document.getElementById('voucherResult').innerText = `Voucher Code: ${voucherCode.substring(0, 12)}...`;
+      updateBalance();
+    }
+
+    async function sendToBlockchainBank() {
+      const recipient = document.getElementById('bankAddress').value;
+      const amount = document.getElementById('bankAmount').value;
+      if (!recipient || !amount || amount <= 0 || !userAccount) {
+        alert("Invalid details or wallet not connected.");
+        return;
+      }
+
+      try {
+        await tokenContract.methods.transfer(recipient, web3.utils.toWei(amount, 'ether')).send({ from: userAccount });
+        document.getElementById("bankResult").innerText = `Sent ${amount} CBDC to ${recipient}`;
+        updateBalance();
+      } catch (err) {
+        alert("Transaction failed: " + err.message);
+      }
+    }
+  </script>
+</body>
+</html>
+
