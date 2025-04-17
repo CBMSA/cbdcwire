@@ -116,6 +116,21 @@
     </div>
   </div>
 
+<!-- For Document Issuance -->
+<form id="docForm">
+  <input type="text" id="docId" placeholder="Document ID" required />
+  <input type="text" id="hash" placeholder="Document Hash" required />
+  <textarea id="metadata" placeholder="Metadata (PDF link, etc.)"></textarea>
+  <input type="text" id="recipient" placeholder="Recipient Wallet" />
+  <button type="submit">Issue Document</button>
+</form>
+
+<!-- For Secure Messaging -->
+<form id="msgForm">
+  <textarea id="clearMessage" placeholder="Settlement message"></textarea>
+  <input type="text" id="sharedSecret" placeholder="Shared Key" />
+  <button type="submit">Encrypt & Send</button>
+</form
   <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
   <script src="app.js"></script>
 </body>
