@@ -2,20 +2,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-contract SADCCBDC {
-    address public admin;
-    mapping(address => uint256) public balances;
-    mapping(address => bool) public frozenAccounts;
-    
-    event Mint(address indexed to, uint256 amount);
-    event Burn(address indexed from, uint256 amount);
-    event TransferToBank(address indexed bank, uint256 amount);
-    event AccountFrozen(address indexed account);
-    event AccountUnfrozen(address indexed account);
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-    modifier onlyAdmin() {
-        require(msg.sender == admin, "Only admin can perform this action");
-        _;
+contract SADCCBDC is ERC20, Ownable {
+    mapping(address => bool) public frozenAccounts;
+
+    constructor() ERC20("SADC CBDC", "SADC") {
+        transferOwnership(0x9Ae7aE53c0aF779fFB979A53fA84709fCF8A9c9e);
     }
 
     modifier notFrozen(address account) {
@@ -23,36 +17,27 @@ contract SADCCBDC {
         _;
     }
 
-    constructor() {
-        admin = 0x9Ae7aE53c0aF779fFB979A53fA84709fCF8A9c9e; // MetaMask Admin Address
-    }
-
-    function mint(address recipient, uint256 amount) external onlyAdmin {
-        balances[recipient] += amount;
-        emit Mint(recipient, amount);
+    function mint(address to, uint256 amount) external onlyOwner {
+        _mint(to, amount);
     }
 
     function burn(uint256 amount) external notFrozen(msg.sender) {
-        require(balances[msg.sender] >= amount, "Insufficient balance");
-        balances[msg.sender] -= amount;
-        emit Burn(msg.sender, amount);
+        _burn(msg.sender, amount);
     }
 
-    function freezeAccount(address account) external onlyAdmin {
+    function freezeAccount(address account) external onlyOwner {
         frozenAccounts[account] = true;
-        emit AccountFrozen(account);
     }
 
-    function unfreezeAccount(address account) external onlyAdmin {
+    function unfreezeAccount(address account) external onlyOwner {
         frozenAccounts[account] = false;
-        emit AccountUnfrozen(account);
     }
 
-    function sendToBank(address bank, uint256 amount) external notFrozen(msg.sender) {
-        require(balances[msg.sender] >= amount, "Insufficient balance");
-        balances[msg.sender] -= amount;
-        balances[bank] += amount;
-        emit TransferToBank(bank, amount);
+    function _beforeTokenTransfer(address from, address to, uint256 amount)
+        internal override
+    {
+        require(!frozenAccounts[from], "Sender is frozen");
+        require(!frozenAccounts[to], "Recipient is frozen");
+        super._beforeTokenTransfer(from, to, amount);
     }
 }
-
