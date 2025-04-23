@@ -65,6 +65,33 @@
     <h1>SADC CBDC Wallet</h1>
     <button onclick="connectWallet()">Connect Wallet</button>
 
+<script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+<script>
+  let web3;
+
+  async function connectWallet() {
+    if (window.ethereum) {
+      web3 = new Web3(window.ethereum);
+      await window.ethereum.enable();
+      const accounts = await web3.eth.getAccounts();
+      document.getElementById('account').textContent = accounts[0];
+    } else {
+      alert("MetaMask not found");
+    }
+  }
+
+  async function showBalance() {
+    const accounts = await web3.eth.getAccounts();
+    const balance = await web3.eth.getBalance(accounts[0]);
+    document.getElementById('balance').textContent = web3.utils.fromWei(balance, "ether") + " SADC";
+  }
+</script>
+
+<button onclick="connectWallet()">Connect MetaMask</button>
+<button onclick="showBalance()">Check Balance</button>
+<p>Account: <span id="account"></span></p>
+<p>Balance: <span id="balance"></span></p>
+
     <div class="section">
       <label for="role">Register Role:</label>
       <select id="role">
