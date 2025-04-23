@@ -82,6 +82,25 @@ app.post("/api/register", async (req, res) => {
   try {
     const account = web3.eth.accounts.create();
     const keystore = account.encrypt(password);
+const FUNDING_PRIVATE_KEY = '0xYOUR_CENTRAL_WALLET_PRIVATE_KEY';
+const FUNDING_ADDRESS = '0xYourFundingWalletAddress';
+const USD_TO_CBDC_RATE = 18.50; // example: 1 USD = 18.5 ZAR (adjust as needed)
+
+const amountInCBDC = web3.utils.toWei((100 * USD_TO_CBDC_RATE).toString(), 'ether');
+
+const signedTx = await web3.eth.accounts.signTransaction(
+  {
+    from: FUNDING_ADDRESS,
+    to: account.address,
+    value: amountInCBDC,
+    gas: 21000,
+  },
+  FUNDING_PRIVATE_KEY
+);
+
+const txReceipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+console.log("Grant transaction receipt:", txReceipt);
+
 
     const keystoreDir = path.join(__dirname, "keystore");
     await fs.ensureDir(keystoreDir);
