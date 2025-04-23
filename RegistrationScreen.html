@@ -1,26 +1,127 @@
 
-<!-- RegistrationScreen.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Register CBDC Wallet</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 0;
+      color: #2d3436;
+    }
+
+    header {
+      background-color: #003366;
+      color: white;
+      padding: 20px 40px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+    }
+
+    nav {
+      background-color: #00509e;
+      padding: 10px 40px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    h2 {
+      text-align: center;
+      color: #00509e;
+      margin-bottom: 30px;
+    }
+
+    label {
+      font-weight: 500;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #00509e;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #003f7f;
+    }
+
+    footer {
+      text-align: center;
+      background-color: #2d3436;
+      color: #b2bec3;
+      padding: 20px;
+      font-size: 0.9em;
+      margin-top: 40px;
+    }
+  </style>
 </head>
 <body>
+
+<header>
+  <h1>CBDC Wallet Registration</h1>
+  <p>Create your secure digital wallet</p>
+</header>
+
+<nav>
+  <a href="Home.html">Home</a>
+  <a href="LoginScreen.html">Login</a>
+  <a href="Transactions (1).html">Transactions</a>
+  <a href="#faq">FAQs</a>
+  <a href="#help">Help</a>
+</nav>
+
+<div class="container">
   <h2>Create CBDC Wallet</h2>
   <form action="/api/register" method="POST">
-    <label>Full Name:</label><br>
-    <input type="text" name="name" required><br><br>
+    <label for="name">Full Name:</label>
+    <input type="text" name="name" id="name" required>
 
-    <label>Phone Number:</label><br>
-    <input type="tel" name="phone" required><br><br>
+    <label for="phone">Phone Number:</label>
+    <input type="tel" name="phone" id="phone" required>
 
-    <label>National ID / Passport Number:</label><br>
-    <input type="text" name="idnumber" required><br><br>
+    <label for="idnumber">National ID / Passport Number:</label>
+    <input type="text" name="idnumber" id="idnumber" required>
 
-    <label>Country of Residence:</label><br>
-    <select name="country" required>
+    <label for="country">Country of Residence:</label>
+    <select name="country" id="country" required>
       <option value="">--Select--</option>
       <option value="South Africa">South Africa</option>
       <option value="Botswana">Botswana</option>
@@ -33,14 +134,18 @@
       <option value="Seychelles">Seychelles</option>
       <option value="Lesotho">Lesotho</option>
       <option value="Foreign">Outside SADC Region</option>
-    </select><br><br>
+    </select>
 
-    <label>Password:</label><br>
-    <input type="password" name="password" required><br><br>
+    <label for="password">Password:</label>
+    <input type="password" name="password" id="password" required>
 
     <button type="submit">Register</button>
   </form>
+</div>
+
+<footer>
+  &copy; 2025 SADC CBDC Wallet | Southern African Development Community
+</footer>
+
 </body>
 </html>
-
-
