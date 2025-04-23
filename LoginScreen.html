@@ -1,5 +1,4 @@
 
-<!-- LoginScreen.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -43,35 +42,24 @@
       color: #00509e;
       margin-top: 40px;
     }
-    ul {
-      margin-left: 20px;
+    input, button {
+      padding: 10px;
+      margin-top: 10px;
+      width: 100%;
+      max-width: 400px;
+      font-size: 1em;
     }
-    .faq-section {
-      margin-top: 30px;
-    }
-    .faq-question {
-      font-weight: bold;
-      color: #2c3e50;
-      margin-top: 20px;
-    }
-    .faq-answer {
-      color: #636e72;
-      margin-bottom: 10px;
-    }
-    .cta {
-      background-color: #dfe6e9;
-      padding: 20px;
-      border-radius: 10px;
-      margin-top: 30px;
-    }
-    .cta a {
-      display: inline-block;
+    button {
       background-color: #00509e;
       color: white;
-      padding: 10px 20px;
-      text-decoration: none;
+      border: none;
       border-radius: 5px;
-      margin-top: 10px;
+      cursor: pointer;
+    }
+    .message {
+      margin-top: 20px;
+      font-weight: bold;
+      color: #2c3e50;
     }
     footer {
       background-color: #2d3436;
@@ -79,12 +67,6 @@
       padding: 20px;
       text-align: center;
       font-size: 0.9em;
-    }
-    .highlight {
-      background: #e3f2fd;
-      border-left: 5px solid #1a73e8;
-      padding: 15px;
-      margin: 20px 0;
     }
   </style>
 </head>
@@ -104,15 +86,48 @@
 </nav>
 
 <div class="container">
-</head>
-<body>
   <h2>Login to Your CBDC Wallet</h2>
-  <form action="/api/login" method="POST">
+  <form onsubmit="createAccount(event)">
     <label>Phone Number:</label><br>
-    <input type="tel" name="phone" required><br><br>
+    <input type="tel" id="phone" required><br><br>
     <label>Password:</label><br>
-    <input type="password" name="password" required><br><br>
-    <button type="submit">Login</button>
+    <input type="password" id="password" required><br><br>
+    <button type="submit">Create Wallet</button>
   </form>
+  <div class="message" id="message"></div>
+</div>
+
+<footer>
+  &copy; 2025 SADC CBDC. All rights reserved.
+</footer>
+
+<script>
+async function createAccount(event) {
+  event.preventDefault();
+  const password = document.getElementById('password').value;
+
+  try {
+    const res = await fetch('http://localhost:3000/createAccount', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+
+    const data = await res.json();
+    const messageDiv = document.getElementById('message');
+
+    if (data.success) {
+      messageDiv.innerText = 'Wallet Created! Address: ' + data.address;
+      messageDiv.style.color = 'green';
+    } else {
+      messageDiv.innerText = 'Error: ' + data.error;
+      messageDiv.style.color = 'red';
+    }
+  } catch (err) {
+    document.getElementById('message').innerText = 'Server error or connection refused.';
+  }
+}
+</script>
+
 </body>
 </html>
