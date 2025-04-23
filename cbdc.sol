@@ -9,7 +9,7 @@ contract SADCCBDC is ERC20, Ownable {
     mapping(address => bool) public frozenAccounts;
 
     constructor() ERC20("SADC CBDC", "SADC") {
-        transferOwnership(0x9Ae7aE53c0aF779fFB979A53fA84709fCF8A9c9e);
+        transferOwnership(0x0aC945DBDC9D1f64752deDf7a40776FE84b8bbc8);
     }
 
     modifier notFrozen(address account) {
