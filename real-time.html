@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SADC CBDC Platform</title>
+</head>
+<body>
+  <h1>Mint CBDC</h1>
+  <input type="text" id="mintAmount" placeholder="ETH Amount">
+  <button onclick="mintCBDC()">Mint</button>
+
+  <h1>Burn CBDC</h1>
+  <input type="text" id="burnAmount" placeholder="ZAR Amount">
+  <button onclick="burnCBDC()">Burn</button>
+
+  <h1>Send CBDC to Bank</h1>
+  <input type="text" id="bankAddress" placeholder="Bank Wallet Address">
+  <input type="text" id="bankAmount" placeholder="ZAR Amount">
+  <button onclick="sendToBank()">Send</button>
+
+  <script>
+    async function getAccount() {
+      return (await window.ethereum.request({ method: 'eth_requestAccounts' }))[0];
+    }
+
+    async function mintCBDC() {
+      const account = await getAccount();
+      const ethAmount = document.getElementById("mintAmount").value;
+      fetch("http://localhost:3000/mint-cbdc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipient: account, ethAmount: parseFloat(ethAmount) })
+      }).then(res => res.json()).then(console.log).catch(console.error);
+    }
+
+    async function burnCBDC() {
+      const account = await getAccount();
+      const amount = document.getElementById("burnAmount").value;
+      fetch("http://localhost:3000/burn-cbdc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userAddress: account, amount: parseInt(amount) })
+      }).then(res => res.json()).then(console.log).catch(console.error);
+    }
+
+    async function sendToBank() {
+      const sender = await getAccount();
+      const bankAddress = document.getElementById("bankAddress").value;
+      const amount = document.getElementById("bankAmount").value;
+      fetch("http://localhost:3000/send-to-bank", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sender, bankAddress, amount: parseInt(amount) })
+      }).then(res => res.json()).then(console.log).catch(console.error);
+    }
+  </script>
+</body>
+</html>
