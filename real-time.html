@@ -1,57 +1,143 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <title>SADC CBDC Platform</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    h1 {
+      color: #0b3d91;
+      font-size: 24px;
+      margin-top: 30px;
+    }
+    input[type="text"] {
+      padding: 10px;
+      margin: 10px 0;
+      width: 250px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      display: block;
+    }
+    button {
+      background-color: #0b3d91;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #094080;
+    }
+    .section {
+      margin-bottom: 40px;
+    }
+    #walletStatus, #balance {
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    #balance {
+      color: #007700;
+    }
+  </style>
 </head>
 <body>
-  <h1>Mint CBDC</h1>
-  <input type="text" id="mintAmount" placeholder="ETH Amount">
-  <button onclick="mintCBDC()">Mint</button>
+  <div id="walletStatus">Connecting to MetaMask...</div>
+  <div id="balance">Balance: --</div>
 
-  <h1>Burn CBDC</h1>
-  <input type="text" id="burnAmount" placeholder="ZAR Amount">
-  <button onclick="burnCBDC()">Burn</button>
+  <div class="section">
+    <h1>Mint CBDC</h1>
+    <input type="text" id="mintAmount" placeholder="Amount to Mint">
+    <button onclick="mintCBDC()">Mint</button>
+  </div>
 
-  <h1>Send CBDC to Bank</h1>
-  <input type="text" id="bankAddress" placeholder="Bank Wallet Address">
-  <input type="text" id="bankAmount" placeholder="ZAR Amount">
-  <button onclick="sendToBank()">Send</button>
+  <div class="section">
+    <h1>Burn CBDC</h1>
+    <input type="text" id="burnAmount" placeholder="Amount to Burn">
+    <button onclick="burnCBDC()">Burn</button>
+  </div>
+
+  <div class="section">
+    <h1>Send CBDC to Bank</h1>
+    <input type="text" id="bankAddress" placeholder="Bank Wallet Address">
+    <input type="text" id="bankAmount" placeholder="Amount to Send">
+    <button onclick="sendToBank()">Send</button>
+  </div>
 
   <script>
-    async function getAccount() {
-      return (await window.ethereum.request({ method: 'eth_requestAccounts' }))[0];
+    let provider, signer, account;
+    const contractAddress = "0xYourCBDCContractAddress"; // Replace with your contract address
+    const abi = [
+      "function mint(address to, uint256 amount) public",
+      "function burn(uint256 amount) public",
+      "function transfer(address to, uint256 amount) public returns (bool)",
+      "function balanceOf(address owner) view returns (uint256)"
+    ];
+
+    async function connectWallet() {
+      if (!window.ethereum) {
+        document.getElementById("walletStatus").innerText = "MetaMask not found.";
+        return;
+      }
+
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      signer = provider.getSigner();
+      account = await signer.getAddress();
+
+      document.getElementById("walletStatus").innerText = "Connected: " + account;
+      updateBalance();
+
+      window.ethereum.on("accountsChanged", async () => {
+        account = await provider.getSigner().getAddress();
+        document.getElementById("walletStatus").innerText = "Account changed: " + account;
+        updateBalance();
+      });
+    }
+
+    async function updateBalance() {
+      const contract = new ethers.Contract(contractAddress, abi, provider);
+      const balance = await contract.balanceOf(account);
+      document.getElementById("balance").innerText = "Balance: " + ethers.utils.formatUnits(balance, 18) + " ZAR";
     }
 
     async function mintCBDC() {
-      const account = await getAccount();
-      const ethAmount = document.getElementById("mintAmount").value;
-      fetch("http://localhost:3000/mint-cbdc", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipient: account, ethAmount: parseFloat(ethAmount) })
-      }).then(res => res.json()).then(console.log).catch(console.error);
+      const amount = ethers.utils.parseUnits(document.getElementById("mintAmount").value, 18);
+      const contract = new ethers.Contract(contractAddress, abi, signer);
+      const tx = await contract.mint(account, amount);
+      await tx.wait();
+      updateBalance();
+      alert("Mint successful!");
     }
 
     async function burnCBDC() {
-      const account = await getAccount();
-      const amount = document.getElementById("burnAmount").value;
-      fetch("http://localhost:3000/burn-cbdc", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userAddress: account, amount: parseInt(amount) })
-      }).then(res => res.json()).then(console.log).catch(console.error);
+      const amount = ethers.utils.parseUnits(document.getElementById("burnAmount").value, 18);
+      const contract = new ethers.Contract(contractAddress, abi, signer);
+      const tx = await contract.burn(amount);
+      await tx.wait();
+      updateBalance();
+      alert("Burn successful!");
     }
 
     async function sendToBank() {
-      const sender = await getAccount();
       const bankAddress = document.getElementById("bankAddress").value;
-      const amount = document.getElementById("bankAmount").value;
-      fetch("http://localhost:3000/send-to-bank", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sender, bankAddress, amount: parseInt(amount) })
-      }).then(res => res.json()).then(console.log).catch(console.error);
+      const amount = ethers.utils.parseUnits(document.getElementById("bankAmount").value, 18);
+      const contract = new ethers.Contract(contractAddress, abi, signer);
+      const tx = await contract.transfer(bankAddress, amount);
+      await tx.wait();
+      updateBalance();
+      alert("Transfer successful!");
     }
+
+    connectWallet();
   </script>
 </body>
-</html>
+</html
