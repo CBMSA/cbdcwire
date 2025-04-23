@@ -71,3 +71,32 @@ app.post("/api/register", async (req, res) => {
 app.listen(port, () => {
   console.log(`CBDC Wallet server running at http://localhost:${port}`);
 });
+
+
+app.post("/api/register", async (req, res) => {
+  const { name, phone, idnumber, country, password } = req.body;
+
+  try {
+    const account = web3.eth.accounts.create();
+    const keystore = account.encrypt(password);
+
+    const keystoreDir = path.join(__dirname, "keystore");
+    await fs.ensureDir(keystoreDir);
+
+    const filename = `UTC--${new Date().toISOString()}--${account.address}.json`;
+    const filepath = path.join(keystoreDir, filename);
+    await fs.writeJson(filepath, keystore);
+
+    // Optional: Save to Oracle DB or log it
+    console.log("New wallet created:", {
+      name, phone, idnumber, country,
+      walletAddress: account.address,
+      keystoreFile: filename
+    });
+
+    res.redirect("/Account.html");
+  } catch (err) {
+    console.error("Wallet creation failed:", err);
+    res.status(500).send("Failed to create wallet");
+  }
+});
