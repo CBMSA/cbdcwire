@@ -1,75 +1,46 @@
-const express = require('express');
-const Web3 = require('web3');
-const axios = require('axios');
+const express = require("express");
+const Web3 = require("web3");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+
 const app = express();
-app.use(express.json());
+const PORT = 3000;
+const web3 = new Web3("https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID"); // Replace with your Infura or node URL
 
-const web3 = new Web3("https://mainnet.infura.io/v3/YOUR_PROJECT_ID");
-const contractABI = []; // Replace with ABI
-const contractAddress = "YOUR_DEPLOYED_CBDC_CONTRACT_ADDRESS";
-const contract = new web3.eth.Contract(contractABI, contractAddress);
-const adminPrivateKey = "YOUR_ADMIN_PRIVATE_KEY";
-const adminAccount = web3.eth.accounts.privateKeyToAccount(adminPrivateKey);
+app.use(cors());
+app.use(bodyParser.json());
 
-async function sendSignedTransaction(tx) {
-    const gas = await tx.estimateGas({ from: adminAccount.address });
-    const data = tx.encodeABI();
-    const txData = {
-        from: adminAccount.address,
-        to: contractAddress,
-        data,
-        gas
-    };
-    const signedTx = await web3.eth.accounts.signTransaction(txData, adminPrivateKey);
-    return await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-}
+// Treasury wallet
+const TREASURY_WALLET = "0xYourTreasuryWalletAddress"; // Replace with Treasury wallet address
+const PRIVATE_KEY = "YourPrivateKey"; // Replace with your wallet private key
 
-app.post("/mint-cbdc", async (req, res) => {
-    const { recipient, ethAmount } = req.body;
-    try {
-        const response = await axios.get("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=zar");
-        const ethPriceZAR = response.data.ethereum.zar;
-        const amountToMint = ethAmount * ethPriceZAR;
+// Initiate a transaction
+app.post("/api/transactions", async (req, res) => {
+  const { fromWallet, toBankAccount, amount } = req.body;
 
-        const tx = contract.methods.mint(recipient, Math.floor(amountToMint));
-        const receipt = await sendSignedTransaction(tx);
-        res.send({ status: "success", receipt });
-    } catch (err) {
-        res.status(500).send({ status: "error", message: err.message });
-    }
+  if (!fromWallet || !toBankAccount || !amount) {
+    return res.status(400).json({ success: false, message: "Invalid input." });
+  }
+
+  try {
+    // Simulate CBDC transfer to bank account (replace with actual logic)
+    const transaction = await web3.eth.accounts.signTransaction(
+      {
+        to: TREASURY_WALLET, // Sending tax to Treasury
+        value: web3.utils.toWei(amount.toString(), "ether"),
+        gas: 2000000,
+      },
+      PRIVATE_KEY
+    );
+
+    const receipt = await web3.eth.sendSignedTransaction(transaction.rawTransaction);
+    console.log("Transaction successful:", receipt);
+
+    return res.json({ success: true, message: "Transaction successful.", receipt });
+  } catch (err) {
+    console.error("Transaction failed:", err);
+    return res.status(500).json({ success: false, message: "Transaction failed." });
+  }
 });
 
-app.post("/burn-cbdc", async (req, res) => {
-    const { userAddress, amount } = req.body;
-    try {
-        const tx = contract.methods.burn(amount);
-        const receipt = await sendSignedTransaction(tx);
-        res.send({ status: "success", receipt });
-    } catch (err) {
-        res.status(500).send({ status: "error", message: err.message });
-    }
-});
-
-app.post("/freeze-account", async (req, res) => {
-    const { target } = req.body;
-    try {
-        const tx = contract.methods.freezeAccount(target);
-        const receipt = await sendSignedTransaction(tx);
-        res.send({ status: "success", receipt });
-    } catch (err) {
-        res.status(500).send({ status: "error", message: err.message });
-    }
-});
-
-app.post("/send-to-bank", async (req, res) => {
-    const { sender, bankAddress, amount } = req.body;
-    try {
-        const tx = contract.methods.sendToBank(bankAddress, amount);
-        const receipt = await sendSignedTransaction(tx);
-        res.send({ status: "success", receipt });
-    } catch (err) {
-        res.status(500).send({ status: "error", message: err.message });
-    }
-});
-
-app.listen(3000, () => console.log("Server running on http://localhost:3000"));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
