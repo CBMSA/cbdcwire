@@ -1,143 +1,193 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SADC CBDC Platform</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f0f2f5;
+      background-color: #f2f2f2;
       margin: 0;
-      padding: 20px;
-      color: #333;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
-    h1 {
-      color: #0b3d91;
-      font-size: 24px;
-      margin-top: 30px;
+    .container {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 600px;
+      margin: auto;
+      overflow-y: auto;
     }
-    input[type="text"] {
+    h1, h2, h3 {
+      color: #003366;
+    }
+    input, select, button {
+      width: 100%;
       padding: 10px;
-      margin: 10px 0;
-      width: 250px;
-      border-radius: 6px;
+      margin: 5px 0;
+      border-radius: 5px;
       border: 1px solid #ccc;
-      display: block;
     }
     button {
-      background-color: #0b3d91;
+      background-color: #0077cc;
       color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 6px;
       cursor: pointer;
+      border: none;
     }
     button:hover {
-      background-color: #094080;
+      background-color: #005fa3;
     }
-    .section {
-      margin-bottom: 40px;
+    #transactions p {
+      background-color: #e8f4ff;
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 5px;
     }
-    #walletStatus, #balance {
-      margin-bottom: 10px;
-      font-weight: bold;
-    }
-    #balance {
-      color: #007700;
+    footer {
+      text-align: center;
+      font-size: 0.9em;
+      color: #555;
+      margin: 20px 0;
     }
   </style>
 </head>
 <body>
-  <div id="walletStatus">Connecting to MetaMask...</div>
-  <div id="balance">Balance: --</div>
+<div class="container">
+  <h1>SADC CBDC Platform</h1>
 
-  <div class="section">
-    <h1>Mint CBDC</h1>
-    <input type="text" id="mintAmount" placeholder="Amount to Mint">
-    <button onclick="mintCBDC()">Mint</button>
+  <div id="auth">
+    <button onclick="connectMetaMask()">Connect MetaMask</button>
+    <p id="walletAddress">MetaMask not connected</p>
   </div>
 
-  <div class="section">
-    <h1>Burn CBDC</h1>
-    <input type="text" id="burnAmount" placeholder="Amount to Burn">
-    <button onclick="burnCBDC()">Burn</button>
+  <div id="dashboard">
+    <h2>Welcome, <span id="userPhone"></span></h2>
+    <p>Name: <span id="userName"></span></p>
+    <p>Account Balance: R<span id="cbdcBalance">0</span></p>
+    <p>Linked Bank Account: <span id="linkedBank"></span></p>
+    <p>Bank Account Balance: R<span id="bankBalance">0</span></p>
+
+    <h3>Transfer CBDC to Bank Account</h3>
+    <input type="number" id="transferAmount" placeholder="Amount">
+    <button onclick="transferToBank()">Transfer</button>
+
+    <h3>Transaction History</h3>
+    <div id="transactions"></div>
   </div>
+</div>
 
-  <div class="section">
-    <h1>Send CBDC to Bank</h1>
-    <input type="text" id="bankAddress" placeholder="Bank Wallet Address">
-    <input type="text" id="bankAmount" placeholder="Amount to Send">
-    <button onclick="sendToBank()">Send</button>
-  </div>
+<footer>
+  &copy; 2025 SADC National Treasuries Digital Platform — Licensed for financial use within SADC member states.
+</footer>
 
-  <script>
-    let provider, signer, account;
-    const contractAddress = "0xYourCBDCContractAddress"; // Replace with your contract address
-    const abi = [
-      "function mint(address to, uint256 amount) public",
-      "function burn(uint256 amount) public",
-      "function transfer(address to, uint256 amount) public returns (bool)",
-      "function balanceOf(address owner) view returns (uint256)"
-    ];
+<script>
+  let user = {
+    phone: "+27000000000",
+    name: "John Doe",
+    cbdcBalance: 1000,
+    bankBalance: 5000,
+    transactions: []
+  };
 
-    async function connectWallet() {
-      if (!window.ethereum) {
-        document.getElementById("walletStatus").innerText = "MetaMask not found.";
-        return;
+  const NATIONAL_TREASURY_ADDRESS = "0xYourTreasuryMetaMaskAddress"; // Replace with actual MetaMask address
+  let web3;
+  let userWallet;
+
+  // Connect to MetaMask
+  async function connectMetaMask() {
+    if (window.ethereum) {
+      try {
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+        web3 = new Web3(window.ethereum);
+        const accounts = await web3.eth.getAccounts();
+        userWallet = accounts[0];
+        document.getElementById("walletAddress").innerText = `Connected: ${userWallet}`;
+        alert(`MetaMask connected: ${userWallet}`);
+      } catch (err) {
+        alert("MetaMask connection failed.");
+        console.error(err);
       }
+    } else {
+      alert("MetaMask not found. Please install MetaMask.");
+    }
+  }
 
-      provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      signer = provider.getSigner();
-      account = await signer.getAddress();
+  // Transfer CBDC to Bank Account
+  async function transferToBank() {
+    const amount = parseFloat(document.getElementById("transferAmount").value);
+    const fee = 0.02 * amount;
+    const tax = 0.01 * amount;
+    const totalDeduct = amount + fee + tax;
 
-      document.getElementById("walletStatus").innerText = "Connected: " + account;
-      updateBalance();
+    if (amount > 0 && user.cbdcBalance >= totalDeduct) {
+      user.cbdcBalance -= totalDeduct;
+      user.bankBalance += amount;
 
-      window.ethereum.on("accountsChanged", async () => {
-        account = await provider.getSigner().getAddress();
-        document.getElementById("walletStatus").innerText = "Account changed: " + account;
-        updateBalance();
+      const taxMessage = `R${tax.toFixed(2)} tax has been sent to the National Treasury.`;
+      user.transactions.push(`Transferred R${amount.toFixed(2)} to bank. Fees: R${fee.toFixed(2)}, Tax: R${tax.toFixed(2)}.`);
+      updateBalances();
+      renderTransactions();
+
+      try {
+        await sendTaxToTreasury(tax);
+        alert(`Transfer successful! ${taxMessage}`);
+      } catch (err) {
+        alert(`Transfer successful, but tax payment failed: ${err.message}`);
+        console.error(err);
+      }
+    } else {
+      alert("Insufficient CBDC balance or invalid amount.");
+    }
+  }
+
+  // Send Tax to National Treasury
+  async function sendTaxToTreasury(taxAmount) {
+    if (!web3 || !userWallet) {
+      alert("Please connect MetaMask first.");
+      return;
+    }
+
+    const taxInWei = web3.utils.toWei(taxAmount.toString(), "ether"); // Convert tax to Ether (adjust decimals if needed)
+
+    try {
+      const transaction = await web3.eth.sendTransaction({
+        from: userWallet,
+        to: NATIONAL_TREASURY_ADDRESS,
+        value: taxInWei
       });
+      console.log("Tax payment transaction:", transaction);
+    } catch (err) {
+      console.error("Error sending tax:", err);
+      throw new Error("Tax payment failed.");
     }
+  }
 
-    async function updateBalance() {
-      const contract = new ethers.Contract(contractAddress, abi, provider);
-      const balance = await contract.balanceOf(account);
-      document.getElementById("balance").innerText = "Balance: " + ethers.utils.formatUnits(balance, 18) + " ZAR";
-    }
+  // Update Balances
+  function updateBalances() {
+    document.getElementById("cbdcBalance").innerText = user.cbdcBalance.toFixed(2);
+    document.getElementById("bankBalance").innerText = user.bankBalance.toFixed(2);
+  }
 
-    async function mintCBDC() {
-      const amount = ethers.utils.parseUnits(document.getElementById("mintAmount").value, 18);
-      const contract = new ethers.Contract(contractAddress, abi, signer);
-      const tx = await contract.mint(account, amount);
-      await tx.wait();
-      updateBalance();
-      alert("Mint successful!");
-    }
+  // Render Transactions
+  function renderTransactions() {
+    const txDiv = document.getElementById("transactions");
+    txDiv.innerHTML = "";
+    user.transactions.forEach(tx => {
+      const p = document.createElement("p");
+      p.innerText = tx;
+      txDiv.appendChild(p);
+    });
+  }
 
-    async function burnCBDC() {
-      const amount = ethers.utils.parseUnits(document.getElementById("burnAmount").value, 18);
-      const contract = new ethers.Contract(contractAddress, abi, signer);
-      const tx = await contract.burn(amount);
-      await tx.wait();
-      updateBalance();
-      alert("Burn successful!");
-    }
-
-    async function sendToBank() {
-      const bankAddress = document.getElementById("bankAddress").value;
-      const amount = ethers.utils.parseUnits(document.getElementById("bankAmount").value, 18);
-      const contract = new ethers.Contract(contractAddress, abi, signer);
-      const tx = await contract.transfer(bankAddress, amount);
-      await tx.wait();
-      updateBalance();
-      alert("Transfer successful!");
-    }
-
-    connectWallet();
-  </script>
+  // Connect MetaMask on page load
+  connectMetaMask();
+</script>
 </body>
-</html
+</html>
