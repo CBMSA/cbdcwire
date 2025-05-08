@@ -3,113 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SADC CBDC Platform</title>
+  <title>CBDC Real-Time Platform</title>
   <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    .container {
-      background-color: #fff;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 600px;
-      margin: auto;
-      overflow-y: auto;
-    }
-    h1, h2, h3 {
-      color: #003366;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background-color: #0077cc;
-      color: white;
-      cursor: pointer;
-      border: none;
-    }
-    button:hover {
-      background-color: #005fa3;
-    }
-    #transactions p {
-      background-color: #e8f4ff;
-      padding: 8px;
-      border-radius: 4px;
-      margin-bottom: 5px;
-    }
-    footer {
-      text-align: center;
-      font-size: 0.9em;
-      color: #555;
-      margin: 20px 0;
-    }
+    body { font-family: Arial, sans-serif; background-color: #f2f2f2; margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; }
+    .container { background-color: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); width: 100%; max-width: 600px; margin: auto; overflow-y: auto; }
+    h1, h2, h3 { color: #003366; }
+    input, select, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; }
+    button { background-color: #0077cc; color: white; cursor: pointer; border: none; }
+    button:hover { background-color: #005fa3; }
+    footer { text-align: center; font-size: 0.9em; color: #555; margin: 20px 0; }
   </style>
 </head>
 <body>
 <div class="container">
-  <h1>SADC CBDC Platform</h1>
+  <h1>CBDC Real-Time Platform</h1>
+  
+  <p id="wallet-status">Wallet: Not Connected</p>
+  <button onclick="connectMetaMask()">Connect MetaMask</button>
 
-  <div id="auth">
-    <button onclick="connectMetaMask()">Connect MetaMask</button>
-    <p id="walletAddress">MetaMask not connected</p>
-  </div>
+  <h3>Transfer CBDC to Bank Account</h3>
+  <input type="text" id="bankAccount" placeholder="Bank Account Number">
+  <input type="number" id="transferAmount" placeholder="Amount (CBDC)">
+  <button onclick="transferCbdcToBank()">Transfer</button>
 
-  <div id="dashboard">
-    <h2>Welcome, <span id="userPhone"></span></h2>
-    <p>Name: <span id="userName"></span></p>
-    <p>Account Balance: R<span id="cbdcBalance">0</span></p>
-    <p>Linked Bank Account: <span id="linkedBank"></span></p>
-    <p>Bank Account Balance: R<span id="bankBalance">0</span></p>
-
-    <h3>Transfer CBDC to Bank Account</h3>
-    <input type="number" id="transferAmount" placeholder="Amount">
-    <button onclick="transferToBank()">Transfer</button>
-
-    <h3>Transaction History</h3>
-    <div id="transactions"></div>
-  </div>
+  <h3>Transaction Updates</h3>
+  <ul id="transaction-updates"></ul>
 </div>
 
 <footer>
-  &copy; 2025 SADC National Treasuries Digital Platform — Licensed for financial use within SADC member states.
+  &copy; 2025 SADC Digital Payment Platform — Real-Time CBDC Transactions.
 </footer>
 
 <script>
-  let user = {
-    phone: "+27000000000",
-    name: "John Doe",
-    cbdcBalance: 1000,
-    bankBalance: 5000,
-    transactions: []
-  };
-
-  const NATIONAL_TREASURY_ADDRESS = "0xYourTreasuryMetaMaskAddress"; // Replace with actual MetaMask address
   let web3;
   let userWallet;
+  const TRANSACTION_API = "http://localhost:3000/api/transactions"; // Replace with your backend URL
+  const TREASURY_WALLET = "0xYourTreasuryWalletAddress"; // Replace with the Treasury wallet address
 
-  // Connect to MetaMask
   async function connectMetaMask() {
     if (window.ethereum) {
       try {
+        // Request MetaMask connection
         await window.ethereum.request({ method: "eth_requestAccounts" });
         web3 = new Web3(window.ethereum);
         const accounts = await web3.eth.getAccounts();
         userWallet = accounts[0];
-        document.getElementById("walletAddress").innerText = `Connected: ${userWallet}`;
-        alert(`MetaMask connected: ${userWallet}`);
+        document.getElementById("wallet-status").innerText = `Wallet: Connected (${userWallet})`;
       } catch (err) {
         alert("MetaMask connection failed.");
         console.error(err);
@@ -119,75 +59,44 @@
     }
   }
 
-  // Transfer CBDC to Bank Account
-  async function transferToBank() {
+  async function transferCbdcToBank() {
+    const bankAccount = document.getElementById("bankAccount").value;
     const amount = parseFloat(document.getElementById("transferAmount").value);
-    const fee = 0.02 * amount;
-    const tax = 0.01 * amount;
-    const totalDeduct = amount + fee + tax;
-
-    if (amount > 0 && user.cbdcBalance >= totalDeduct) {
-      user.cbdcBalance -= totalDeduct;
-      user.bankBalance += amount;
-
-      const taxMessage = `R${tax.toFixed(2)} tax has been sent to the National Treasury.`;
-      user.transactions.push(`Transferred R${amount.toFixed(2)} to bank. Fees: R${fee.toFixed(2)}, Tax: R${tax.toFixed(2)}.`);
-      updateBalances();
-      renderTransactions();
-
-      try {
-        await sendTaxToTreasury(tax);
-        alert(`Transfer successful! ${taxMessage}`);
-      } catch (err) {
-        alert(`Transfer successful, but tax payment failed: ${err.message}`);
-        console.error(err);
-      }
-    } else {
-      alert("Insufficient CBDC balance or invalid amount.");
-    }
-  }
-
-  // Send Tax to National Treasury
-  async function sendTaxToTreasury(taxAmount) {
-    if (!web3 || !userWallet) {
-      alert("Please connect MetaMask first.");
+    if (!bankAccount || amount <= 0) {
+      alert("Please provide a valid bank account and amount.");
       return;
     }
 
-    const taxInWei = web3.utils.toWei(taxAmount.toString(), "ether"); // Convert tax to Ether (adjust decimals if needed)
-
+    // Communicate with backend to initiate the transaction
     try {
-      const transaction = await web3.eth.sendTransaction({
-        from: userWallet,
-        to: NATIONAL_TREASURY_ADDRESS,
-        value: taxInWei
+      const response = await fetch(TRANSACTION_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fromWallet: userWallet,
+          toBankAccount: bankAccount,
+          amount: amount
+        }),
       });
-      console.log("Tax payment transaction:", transaction);
+      const result = await response.json();
+      if (result.success) {
+        alert("Transaction initiated successfully!");
+        addTransactionUpdate(`Transaction of ${amount} CBDC to ${bankAccount} initiated.`);
+      } else {
+        alert("Transaction failed: " + result.message);
+      }
     } catch (err) {
-      console.error("Error sending tax:", err);
-      throw new Error("Tax payment failed.");
+      console.error("Error initiating transaction:", err);
+      alert("Transaction failed.");
     }
   }
 
-  // Update Balances
-  function updateBalances() {
-    document.getElementById("cbdcBalance").innerText = user.cbdcBalance.toFixed(2);
-    document.getElementById("bankBalance").innerText = user.bankBalance.toFixed(2);
+  function addTransactionUpdate(message) {
+    const updatesList = document.getElementById("transaction-updates");
+    const listItem = document.createElement("li");
+    listItem.innerText = message;
+    updatesList.appendChild(listItem);
   }
-
-  // Render Transactions
-  function renderTransactions() {
-    const txDiv = document.getElementById("transactions");
-    txDiv.innerHTML = "";
-    user.transactions.forEach(tx => {
-      const p = document.createElement("p");
-      p.innerText = tx;
-      txDiv.appendChild(p);
-    });
-  }
-
-  // Connect MetaMask on page load
-  connectMetaMask();
 </script>
 </body>
 </html>
