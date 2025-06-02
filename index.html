@@ -1,11 +1,276 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Financial Monitoring Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SADC CBDC Platform</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .container {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 700px;
+      margin: auto;
+    }
+    h1, h2, h3 {
+      color: #003366;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #0066cc;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #004c99;
+    }
+    #transactions p {
+      background-color: #e9f3ff;
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 5px;
+    }
+    footer {
+      text-align: center;
+      padding: 15px;
+      font-size: 0.9em;
+      color: #555;
+    }
+    #sadcLogo {
+      width: 120px;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script src="./bundle.js"></script>
+
+<div class="container">
+  <img id="sadcLogo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/SADC_logo.svg/1200px-SADC_logo.svg.png" alt="SADC Logo" />
+
+  <h1>SADC CBDC Platform</h1>
+
+  <nav>
+    <a href="index.html">CBDC Portal</a> |
+    <a href="home.html">Home</a> |
+    <a href="muchbetrading.html">MUCHBE TRADING</a> |
+    <a href="p2p.html">Wallet</a>
+  </nav>
+
+  <div id="auth">
+    <select id="countryCode">
+      <option value="+27">+27 (South Africa)</option>
+      <option value="+263">+263 (Zimbabwe)</option>
+      <option value="+260">+260 (Zambia)</option>
+    </select>
+    <select id="nationality">
+      <option value="South Africa">South Africa</option>
+      <option value="Zimbabwe">Zimbabwe</option>
+      <option value="Zambia">Zambia</option>
+      <option value="Namibia">Namibia</option>
+      <option value="Botswana">Botswana</option>
+      <option value="Lesotho">Lesotho</option>
+      <option value="Eswatini">Eswatini</option>
+      <option value="Mozambique">Mozambique</option>
+      <option value="Malawi">Malawi</option>
+      <option value="Angola">Angola</option>
+      <option value="Tanzania">Tanzania</option>
+      <option value="DRC">DRC</option>
+      <option value="Seychelles">Seychelles</option>
+      <option value="Mauritius">Mauritius</option>
+    </select>
+    <input type="text" id="name" placeholder="Treasury Name">
+    <input type="email" id="email" placeholder="Email Address">
+    <input type="text" id="house" placeholder="Office Address">
+    <input type="text" id="phone" placeholder="Phone Number">
+    <input type="text" id="bankName" placeholder="Bank Name">
+    <input type="text" id="bankAcc" placeholder="Bank Account Number">
+
+    <button onclick="register()">Register</button>
+    <button onclick="login()">Login</button>
+    <button onclick="connectMetaMask()">Connect MetaMask</button>
+  </div>
+
+  <div id="dashboard" style="display:none;">
+    <h2>Welcome, <span id="userPhone"></span></h2>
+    <p>Name: <span id="userName"></span></p>
+    <p>Account Balance: R<span id="cbdcBalance">0</span></p>
+    <p>Linked Bank Account: <span id="linkedBank"></span></p>
+    <p>Bank Account Balance: R<span id="bankBalance">0</span></p>
+    <p>Connected Wallet: <span id="walletAddress">Not connected</span></p>
+
+    <h3>Transfer CBDC to Bank Account</h3>
+    <input type="number" id="transferAmount" placeholder="Amount">
+    <button onclick="transferToBank()">Transfer</button>
+
+    <h3>Transaction History</h3>
+    <div id="transactions"></div>
+    <button onclick="downloadPDF()">Download PDF Report</button>
+    <div id="qrcode" style="margin-top: 20px;"></div>
+  </div>
+</div>
+
+<footer>
+  &copy; 2025 SADC Digital Payment Platform — Licensed for financial applications within SADC member states. All rights reserved.
+</footer>
+
+<script>
+  let user = null;
+  let wallet = null;
+
+  async function connectMetaMask() {
+    if (typeof window.ethereum !== 'undefined') {
+      try {
+        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+        wallet = accounts[0];
+        document.getElementById('walletAddress').innerText = wallet;
+      } catch (err) {
+        alert("MetaMask connection failed");
+      }
+    } else {
+      alert("MetaMask not installed");
+    }
+  }
+
+  function generateTrackingID() {
+    return 'TX-' + Date.now().toString(36).toUpperCase() + '-' + Math.floor(Math.random() * 10000);
+  }
+
+  function sendSMS(phone, message) {
+    console.log(`SMS to ${phone}: ${message}`);
+  }
+
+  function fetchBankBalance(accountNumber) {
+    const balances = {
+      "0001": 50000000,
+      "123456": 1000000000,
+      "8888": 777777777,
+    };
+    return balances[accountNumber] || Math.floor(Math.random() * 90000000 + 10000000);
+  }
+
+  function register() {
+    const code = document.getElementById('countryCode').value;
+    const phone = code + document.getElementById('phone').value.trim();
+    const accountNumber = document.getElementById('bankAcc').value.trim();
+    const bankBal = fetchBankBalance(accountNumber);
+
+    user = {
+      phone: phone,
+      name: document.getElementById('name').value,
+      email: document.getElementById('email').value,
+      office: document.getElementById('house').value,
+      nationality: document.getElementById('nationality').value,
+      bankName: document.getElementById('bankName').value,
+      bankAcc: accountNumber,
+      cbdcBalance: 1000000000000,
+      bankBalance: bankBal,
+      transactions: []
+    };
+
+    sendSMS(phone, `Welcome ${user.name}. R1,000,000,000,000 CBDC credited.`);
+    alert('Treasury Registered Successfully!');
+    showDashboard();
+  }
+
+  function login() {
+    const code = document.getElementById('countryCode').value;
+    const phone = code + document.getElementById('phone').value.trim();
+
+    if (user && user.phone === phone) {
+      showDashboard();
+    } else {
+      alert('User not found. Please register.');
+    }
+  }
+
+  function showDashboard() {
+    document.getElementById('auth').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+
+    document.getElementById('userPhone').innerText = user.phone;
+    document.getElementById('userName').innerText = `${user.name} (${user.nationality})`;
+    document.getElementById('linkedBank').innerText = `${user.bankName} ${user.bankAcc}`;
+    updateBalances();
+    renderTransactions();
+  }
+
+  async function transferToBank() {
+    const amount = parseFloat(document.getElementById('transferAmount').value);
+    if (isNaN(amount) || amount <= 0) return alert('Enter a valid amount.');
+    if (amount > user.cbdcBalance) return alert('Insufficient CBDC funds.');
+
+    const tax = amount * 0.15;
+    const gasFee = 0.001; // simulated
+    const netAmount = amount - tax;
+
+    user.cbdcBalance -= amount;
+    user.bankBalance += netAmount;
+
+    const txID = generateTrackingID();
+    user.transactions.push({ type: "Transfer", amount, tax, gasFee, netAmount, txID, date: new Date().toLocaleString() });
+
+    sendSMS(user.phone, `R${amount.toLocaleString()} transferred to bank. R${tax.toLocaleString()} tax deducted.`);
+
+    // simulate sending tax to MetaMask wallet
+    if (wallet) {
+      console.log(`Sent R${(tax + gasFee).toFixed(2)} in tax + gas fee to wallet ${wallet}`);
+    }
+
+    updateBalances();
+    renderTransactions();
+    generateQRCode(txID);
+    alert('Transfer successful.');
+  }
+
+  function renderTransactions() {
+    const txContainer = document.getElementById('transactions');
+    txContainer.innerHTML = "";
+    user.transactions.forEach(tx => {
+      txContainer.innerHTML += `<p><b>${tx.txID}</b><br>${tx.date}<br>${tx.type}: R${tx.amount.toLocaleString()}<br>Tax: R${tx.tax?.toFixed(2)}<br>Net: R${tx.netAmount?.toFixed(2)}</p>`;
+    });
+  }
+
+  function generateQRCode(data) {
+    document.getElementById("qrcode").innerHTML = "";
+    new QRCode(document.getElementById("qrcode"), {
+      text: data,
+      width: 180,
+      height: 180
+    });
+  }
+
+  function downloadPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text(`Transaction History for ${user.name}`, 10, 10);
+    user.transactions.forEach((tx, i) => {
+      doc.text(`${i+1}. ${tx.date} | ${tx.type} | Amount: R${tx.amount} | Tax: R${tx.tax?.toFixed(2)} | Net: R${tx.netAmount?.toFixed(2)} | ID: ${tx.txID}`, 10, 20 + i * 10);
+    });
+    doc.save("CBDC_Transaction_Report.pdf");
+  }
+</script>
+
 </body>
 </html>
+
+
