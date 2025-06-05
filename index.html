@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -116,7 +115,7 @@
 
           // Auto transfer budget to MetaMask wallet
           if (user && user.cbdcBalance > 0) {
-            alert("Transferring entire CBDC budget to your MetaMask wallet (simulated).");
+            alert("Transferring entire CBDC budget to your MetaMask wallet (simulated).\nNOTE: This does not move real ETH.");
 
             user.transactions.push({
               type: "CBDC to MetaMask",
@@ -176,5 +175,4 @@
 
 </body>
 </html>
-
 
