@@ -2,264 +2,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SADC CBDC Platform</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <meta charset="UTF-8">
+  <title>SADC CBDC Portal</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f5f5f5;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    .container {
-      background-color: #fff;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 700px;
-      margin: auto;
-    }
-    h1, h2, h3 {
-      color: #003366;
+      margin: 30px;
+      background: #f0f0f0;
     }
     input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin: 6px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background-color: #0066cc;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #004c99;
-    }
-    #transactions p {
-      background-color: #e9f3ff;
       padding: 8px;
-      border-radius: 4px;
-      margin-bottom: 5px;
+      margin: 5px;
     }
-    footer {
-      text-align: center;
-      padding: 15px;
-      font-size: 0.9em;
-      color: #555;
-    }
-    #sadcLogo {
-      width: 120px;
-      margin-bottom: 10px;
+    #dashboard {
+      display: none;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <img id="sadcLogo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/SADC_logo.svg/1200px-SADC_logo.svg.png" alt="SADC Logo" />
-    <h1>SADC CBDC Platform</h1>
 
-    <nav>
-      <a href="index.html">CBDC Portal</a> |
-      <a href="home.html">Home</a> |
-      <a href="muchbetrading.html">MUCHBE TRADING</a> |
-      <a href="p2p.html">Wallet</a>
-    </nav>
+  <h2>SADC CBDC Web3 Wallet</h2>
 
-    <div id="auth">
-      <select id="countryCode">
-        <option value="+27">+27 (South Africa)</option>
-        <option value="+263">+263 (Zimbabwe)</option>
-        <option value="+260">+260 (Zambia)</option>
-      </select>
-      <select id="nationality">
-        <option value="South Africa">South Africa</option>
-        <option value="Zimbabwe">Zimbabwe</option>
-        <option value="Zambia">Zambia</option>
-        <option value="Namibia">Namibia</option>
-        <option value="Botswana">Botswana</option>
-        <option value="Lesotho">Lesotho</option>
-        <option value="Eswatini">Eswatini</option>
-        <option value="Mozambique">Mozambique</option>
-        <option value="Malawi">Malawi</option>
-        <option value="Angola">Angola</option>
-        <option value="Tanzania">Tanzania</option>
-        <option value="DRC">DRC</option>
-        <option value="Seychelles">Seychelles</option>
-      </select>
-      <input type="text" id="fullName" placeholder="Full Name" />
-      <input type="email" id="email" placeholder="Email Address" />
-      <input type="text" id="house" placeholder="Office Address" />
-      <input type="text" id="phone" placeholder="Phone Number" />
-      <input type="text" id="bankName" placeholder="Bank Name" />
-      <input type="text" id="bankAcc" placeholder="Bank Account Number" />
-      <button onclick="register()">Register</button>
-      <button onclick="login()">Login</button>
-      <button onclick="connectMetaMask()">Connect MetaMask</button>
-    </div>
-
-    <div id="dashboard" style="display:none;">
-      <h2>Welcome, <span id="userPhone"></span></h2>
-      <p>Name: <span id="userName"></span></p>
-      <p>Account Balance: R<span id="cbdcBalance">1,500,000,000,000</span></p>
-      <p>Linked Bank Account: <span id="linkedBank"></span></p>
-      <p>Bank Account Balance: R<span id="bankBalance">0</span></p>
-      <p>Connected Wallet: <span id="walletAddress"></span></p>
-
-      <h3>Transfer CBDC to Bank Account</h3>
-      <input type="number" id="transferAmount" placeholder="Amount">
-      <button onclick="transferToBank()">Transfer</button>
-
-      <h3>Transaction History</h3>
-      <div id="transactions"></div>
-      <button onclick="downloadPDF()">Download PDF Report</button>
-      <div id="qrcode" style="margin-top: 20px;"></div>
-
-      <h3>Upload camt.053 File</h3>
-      <input type="file" id="camtFile" />
-      <button onclick="processCamt053()">Process camt.053</button>
-      <div id="camtStatus"></div>
-    </div>
+  <!-- Authentication Panel -->
+  <div id="auth">
+    <h3>Register</h3>
+    <input type="text" id="name" placeholder="Full Name"><br>
+    <input type="text" id="email" placeholder="Email"><br>
+    <input type="text" id="phone" placeholder="Phone Number"><br>
+    <input type="text" id="bankName" placeholder="Bank Name"><br>
+    <input type="text" id="bankAcc" placeholder="Bank Account"><br>
+    <button onclick="register()">Register</button>
+    <button onclick="login()">Login</button>
   </div>
 
-  <footer>
-    &copy; 2025 SADC Digital Payment Platform — Licensed for financial applications within SADC member states. All rights reserved.
-  </footer>
+  <!-- Dashboard Panel -->
+  <div id="dashboard">
+    <h3>Welcome <span id="userName"></span> 📱</h3>
+    <p><strong>Phone:</strong> <span id="userPhone"></span></p>
+    <p><strong>CBDC Balance:</strong> R<span id="cbdcBalance"></span></p>
+    <p><strong>Bank:</strong> <span id="linkedBank"></span></p>
+    <p><strong>Bank Balance:</strong> R<span id="bankBalance"></span></p>
+    <p><strong>Connected Wallet:</strong> <span id="walletAddress"></span></p>
 
+    <h4>Transfer to Bank</h4>
+    <input type="number" id="transferAmount" placeholder="Amount in ZAR">
+    <button onclick="transferToBank()">Send to Bank</button>
+
+    <h4>MetaMask</h4>
+    <button onclick="connectMetaMask()">Connect MetaMask</button>
+
+    <h4>Transaction History</h4>
+    <div id="transactions" style="border: 1px solid #ccc; padding: 10px;"></div>
+  </div>
+
+  <!-- JavaScript Logic -->
   <script>
-    let user = {
-      name: '',
-      phone: '',
-      bankAcc: '',
-      bankBalance: 0,
-      transactions: []
-    };
+    let user = null;
+    let walletAddress = null;
 
-    function register() {
-      user.name = document.getElementById("fullName").value;
-      user.phone = document.getElementById("phone").value;
-      user.bankAcc = document.getElementById("bankAcc").value;
-      document.getElementById("auth").style.display = "none";
-      document.getElementById("dashboard").style.display = "block";
-      document.getElementById("userName").innerText = user.name;
-      document.getElementById("userPhone").innerText = user.phone;
-      document.getElementById("linkedBank").innerText = user.bankAcc;
-    }
+    async function register() {
+      const name = document.getElementById("name")?.value || "User";
+      const email = document.getElementById("email").value;
+      const phone = document.getElementById("phone").value;
+      const bankName = document.getElementById("bankName").value;
+      const bankAcc = document.getElementById("bankAcc").value;
 
-    function login() {
-      alert("Mock login successful.");
-    }
-
-    function connectMetaMask() {
-      document.getElementById("walletAddress").innerText = "0xABCDEF1234567890";
-    }
-
-    function transferToBank() {
-      let amount = parseFloat(document.getElementById("transferAmount").value);
-      if (!isNaN(amount)) {
-        user.bankBalance += amount;
-        document.getElementById("bankBalance").innerText = user.bankBalance.toFixed(2);
-        user.transactions.push({ type: "CBDC to Bank", amount, date: new Date().toLocaleString() });
-        updateTransactions();
-      }
-    }
-
-    function updateTransactions() {
-      const container = document.getElementById("transactions");
-      container.innerHTML = '';
-      user.transactions.forEach(tx => {
-        const p = document.createElement("p");
-        p.innerText = `${tx.type}: R${tx.amount} on ${tx.date}`;
-        container.appendChild(p);
-      });
-    }
-
-    function downloadPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.text("Transaction History", 10, 10);
-      user.transactions.forEach((tx, index) => {
-        doc.text(`${index + 1}. ${tx.type}: R${tx.amount} on ${tx.date}`, 10, 20 + index * 10);
-      });
-      doc.save("CBDC_Transactions.pdf");
-    }
-
-    function processCamt053() {
-      const fileInput = document.getElementById("camtFile");
-      const statusDiv = document.getElementById("camtStatus");
-
-      if (!fileInput.files.length) {
-        alert("Please upload a camt.053 XML file.");
+      if (!email || !phone || !bankName || !bankAcc) {
+        alert("Please fill in all fields.");
         return;
       }
 
-      const file = fileInput.files[0];
-      const reader = new FileReader();
-
-      reader.onload = function () {
-        try {
-          const xml = reader.result;
-          const parser = new DOMParser();
-          const xmlDoc = parser.parseFromString(xml, "text/xml");
-
-          const transactions = xmlDoc.getElementsByTagName("LqdtyCdtTrf");
-          const extractedTransactions = [];
-
-          for (let transaction of transactions) {
-            const creditorAccount = transaction.querySelector("CdtrAcct Id Othr Id")?.textContent;
-            const debtorAccount = transaction.querySelector("DbtrAcct Id Othr Id")?.textContent;
-            const amountElem = transaction.querySelector("TrfdAmt AmtWthCcy");
-            const amount = amountElem?.textContent;
-            const currency = amountElem?.getAttribute("Ccy");
-            const settlementDate = transaction.querySelector("SttlmDt")?.textContent;
-
-            if (amount) {
-              extractedTransactions.push({
-                creditorAccount,
-                debtorAccount,
-                amount: parseFloat(amount),
-                currency,
-                settlementDate
-              });
-            }
-          }
-
-          if (extractedTransactions.length === 0) {
-            statusDiv.innerText = "No transactions found in the camt.053 file.";
-            return;
-          }
-
-          extractedTransactions.forEach(tx => {
-            if (user.bankAcc === tx.creditorAccount) user.bankBalance += tx.amount;
-            if (user.bankAcc === tx.debtorAccount) user.bankBalance -= tx.amount;
-
-            user.transactions.push({
-              type: "camt.053 Transfer",
-              amount: tx.amount,
-              currency: tx.currency,
-              date: tx.settlementDate
-            });
-          });
-
-          updateTransactions();
-          document.getElementById("bankBalance").innerText = user.bankBalance.toFixed(2);
-          statusDiv.innerText = `Processed ${extractedTransactions.length} transaction(s).`;
-        } catch (err) {
-          console.error(err);
-          alert("Failed to process camt.053 file.");
-        }
+      user = {
+        name,
+        email,
+        phone,
+        bankName,
+        bankAcc,
+        cbdcBalance: 1500000000000,
+        bankBalance: 0,
+        transactions: []
       };
 
-      reader.readAsText(file);
+      alert("Registration successful. Please login.");
+    }
+
+    async function login() {
+      if (!user) {
+        alert("Please register first.");
+        return;
+      }
+
+      document.getElementById("auth").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
+
+      document.getElementById("userPhone").innerText = user.phone;
+      document.getElementById("userName").innerText = user.name;
+      document.getElementById("cbdcBalance").innerText = user.cbdcBalance.toLocaleString();
+      document.getElementById("linkedBank").innerText = user.bankName;
+      document.getElementById("bankBalance").innerText = user.bankBalance.toLocaleString();
+      document.getElementById("walletAddress").innerText = walletAddress || "Not Connected";
+    }
+
+    async function connectMetaMask() {
+      if (typeof window.ethereum !== 'undefined') {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          walletAddress = accounts[0];
+          alert("MetaMask connected: " + walletAddress);
+          document.getElementById("walletAddress").innerText = walletAddress;
+
+          // Auto transfer budget to MetaMask wallet
+          if (user && user.cbdcBalance > 0) {
+            alert("Transferring entire CBDC budget to your MetaMask wallet (simulated).");
+
+            user.transactions.push({
+              type: "CBDC to MetaMask",
+              amount: user.cbdcBalance,
+              to: walletAddress
+            });
+
+            user.cbdcBalance = 0;
+            document.getElementById("cbdcBalance").innerText = "0";
+            updateTransactionHistory();
+          }
+
+        } catch (err) {
+          alert("MetaMask connection failed.");
+        }
+      } else {
+        alert("MetaMask not detected.");
+      }
+    }
+
+    function transferToBank() {
+      const amount = parseFloat(document.getElementById("transferAmount").value);
+      if (!amount || amount <= 0) {
+        alert("Enter a valid amount.");
+        return;
+      }
+
+      if (amount > user.cbdcBalance) {
+        alert("Insufficient CBDC balance.");
+        return;
+      }
+
+      user.cbdcBalance -= amount;
+      user.bankBalance += amount;
+
+      user.transactions.push({
+        type: "CBDC to Bank",
+        amount,
+        to: user.bankAcc
+      });
+
+      document.getElementById("cbdcBalance").innerText = user.cbdcBalance.toLocaleString();
+      document.getElementById("bankBalance").innerText = user.bankBalance.toLocaleString();
+      updateTransactionHistory();
+    }
+
+    function updateTransactionHistory() {
+      const txDiv = document.getElementById("transactions");
+      txDiv.innerHTML = "";
+      user.transactions.forEach(tx => {
+        const p = document.createElement("p");
+        p.innerText = `${tx.type}: R${tx.amount.toLocaleString()} → ${tx.to}`;
+        txDiv.appendChild(p);
+      });
     }
   </script>
+
 </body>
 </html>
+
+
