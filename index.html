@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -52,6 +53,11 @@
 
     <h4>MetaMask</h4>
     <button onclick="connectMetaMask()">Connect MetaMask</button>
+
+    <h4>SWIFT BIC Lookup</h4>
+    <input type="text" id="bicInput" placeholder="Enter SWIFT/BIC Code">
+    <button onclick="lookupBIC()">Lookup</button>
+    <div id="bicResult" style="margin-top:10px; border:1px solid #ccc; padding:10px;"></div>
 
     <h4>Transaction History</h4>
     <div id="transactions" style="border: 1px solid #ccc; padding: 10px;"></div>
@@ -113,9 +119,8 @@
           alert("MetaMask connected: " + walletAddress);
           document.getElementById("walletAddress").innerText = walletAddress;
 
-          // Auto transfer budget to MetaMask wallet
           if (user && user.cbdcBalance > 0) {
-            alert("Transferring entire CBDC budget to your MetaMask wallet (simulated).\nNOTE: This does not move real ETH.");
+            alert("Transferring entire CBDC budget to your MetaMask wallet (simulated).");
 
             user.transactions.push({
               type: "CBDC to MetaMask",
@@ -171,8 +176,40 @@
         txDiv.appendChild(p);
       });
     }
+
+    function lookupBIC() {
+      const bic = document.getElementById("bicInput").value.trim().toUpperCase();
+      const resultDiv = document.getElementById("bicResult");
+
+      if (!bic || bic.length < 8) {
+        resultDiv.innerText = "Please enter a valid SWIFT/BIC code (minimum 8 characters).";
+        return;
+      }
+
+      const bicDirectory = {
+        "SBZAZAJJ": { bank: "Standard Bank South Africa", country: "South Africa", city: "Johannesburg" },
+        "ABSAZAJJ": { bank: "ABSA Bank", country: "South Africa", city: "Johannesburg" },
+        "FIRNZAJJ": { bank: "FirstRand Bank (FNB)", country: "South Africa", city: "Sandton" },
+        "NEDSZAJJ": { bank: "Nedbank", country: "South Africa", city: "Johannesburg" },
+        "BARCGB22": { bank: "Barclays", country: "United Kingdom", city: "London" },
+        "CITIGB2L": { bank: "Citibank UK", country: "United Kingdom", city: "London" }
+      };
+
+      const info = bicDirectory[bic];
+      if (info) {
+        resultDiv.innerHTML = `
+          <strong>Bank:</strong> ${info.bank}<br>
+          <strong>Country:</strong> ${info.country}<br>
+          <strong>City:</strong> ${info.city}
+        `;
+      } else {
+        resultDiv.innerText = "BIC code not found in directory.";
+      }
+    }
   </script>
 
 </body>
 </html>
+
+
 
