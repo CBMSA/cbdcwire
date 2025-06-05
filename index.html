@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,9 +35,7 @@
       border-radius: 5px;
       border: 1px solid #ccc;
     }
-    button {
-      background-color: #0066cc;
-      color: white;
+   : white;
       cursor: pointer;
     }
     button:hover {
@@ -62,9 +59,6 @@
     }
   </style>
 </head>
-<body>
-
-<div class="container">
   <img id="sadcLogo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/SADC_logo.svg/1200px-SADC_logo.svg.png" alt="SADC Logo" />
 
   <h1>SADC CBDC Platform</h1>
@@ -96,9 +90,7 @@
       <option value="Tanzania">Tanzania</option>
       <option value="DRC">DRC</option>
       <option value="Seychelles">Seychelles</option>
-      <option value="Mauritius">Mauritius</option>
-    </select>
-    <input type="text" id="name" placeholder="Treasury Name">
+      Name">
     <input type="email" id="email" placeholder="Email Address">
     <input type="text" id="house" placeholder="Office Address">
     <input type="text" id="phone" placeholder="Phone Number">
@@ -116,7 +108,7 @@
     <p>Account Balance: R<span id="cbdcBalance">0</span></p>
     <p>Linked Bank Account: <span id="linkedBank"></span></p>
     <p>Bank Account Balance: R<span id="bankBalance">0</span></p>
-    <p>Connected Wallet: <span id="walletAddress">Not connected</span></p>
+    <p>Connected Wallet: <span id="walletAddress</span></p>
 
     <h3>Transfer CBDC to Bank Account</h3>
     <input type="number" id="transferAmount" placeholder="Amount">
@@ -126,6 +118,10 @@
     <div id="transactions"></div>
     <button onclick="downloadPDF()">Download PDF Report</button>
     <div id="qrcode" style="margin-top: 20px;"></div>
+
+    <h3>Upload camt.053 File</h3>
+    <input type="file" id="camtFile" onclick="processCamt053()">Process camt.053</button>
+    <div id="camtStatus"></div>
   </div>
 </div>
 
@@ -134,143 +130,78 @@
 </footer>
 
 <script>
-  let user = null;
-  let wallet = null;
+  // Existing JavaScript code...
 
-  async function connectMetaMask() {
-    if (typeof window.ethereum !== 'undefined') {
+  async function processCamt053() {
+    const fileInput = document.getElementById("camtFile");
+    const statusDiv = document.getElementById("camtStatus");
+
+    if (!fileInput.files.length) {
+      alert("Please upload a camt.053 XML file.");
+      return;
+    }
+
+ = fileInput.files[0];
+    const reader = new FileReader();
+
+    reader.onload = async function () {
       try {
-        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-        wallet = accounts[0];
-        document.getElementById('walletAddress').innerText = wallet;
-      } catch (err) {
-        alert("MetaMask connection failed");
+        const xml = reader.result;
+
+        // Parse the XML
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xml, "text/xml");
+
+        // Extract data from the XML
+        const transactions = xmlDoc.getElementsByTagName("LqdtyCdtTrf");
+        const extractedTransactions = [];
+
+        for (const transaction of transactions) {
+          const creditorAccount = transaction.getElementsByTagName("CdtrAcct")[0]?.getElementsByTagName("Id")[0]?.getElementsByTagName("Othr")[0]?.getElementsByTagName("Id")[0]?.textContent;
+          const debtorAccount = transaction.getElementsByTagName("DbtrAcct")[0]?.getElementsByTagName("Id")[0]?.getElementsByTagName("Othr")[0]?.getElementsByTagName("Id")[0]?.textContent;
+          const amount = transaction.getElementsByTagName("TrfdAmt")[0]?.getElementsByTagName("AmtWthCcy")[0]?.textContent;
+          const currency = transactionName("AmtWthCcy")[0]?.getAttribute("Ccy");
+          const settlementDate = transaction.getElementsByTagName("SttlmDt")[0]?.textContent;
+
+          extractedTransactions.push({
+            creditorAccount,
+            debtorAccount,
+            amount: parseFloat(amount),
+            currency,
+            settlementDate,
+          });
+        }
+
+        // Process the extracted data
+        if (extractedTransactions.length === 0) {
+          statusDiv.innerText = "No transactions found in the camt.053 file.";
+          return;
+        }
+
+        let log = "Processed Transactions:\n";
+        extractedTransactions.forEach((tx, indexn`;
+          log += `Debtor Account: ${tx.debtorAccount}\n`;
+          log += `Amount: ${tx.amount} ${tx.currency}\n`;
+          log += `Settlement Date: ${tx.settlementDate}\n\n`;
+
+          // Update balances (example logic)
+          if (user.bankAcc === tx.creditorAccount) {
+            user.bankBalance += tx.amount;
+          } else if (user.bankAcc === tx.debtorAccount) {
+            user.bankBalance -= tx.amount;
+          }
+
+          // Add to transaction history
+          user.transactions.push({
+            type: "camt.053 Transfer",
+            amount:", err);
+        alert("Failed to process camt.053 file. Please ensure it is valid.");
       }
-    } else {
-      alert("MetaMask not installed");
-    }
-  }
-
-  function generateTrackingID() {
-    return 'TX-' + Date.now().toString(36).toUpperCase() + '-' + Math.floor(Math.random() * 10000);
-  }
-
-  function sendSMS(phone, message) {
-    console.log(`SMS to ${phone}: ${message}`);
-  }
-
-  function fetchBankBalance(accountNumber) {
-    const balances = {
-      "0001": 50000000,
-      "123456": 1000000000,
-      "8888": 777777777,
-    };
-    return balances[accountNumber] || Math.floor(Math.random() * 90000000 + 10000000);
-  }
-
-  function register() {
-    const code = document.getElementById('countryCode').value;
-    const phone = code + document.getElementById('phone').value.trim();
-    const accountNumber = document.getElementById('bankAcc').value.trim();
-    const bankBal = fetchBankBalance(accountNumber);
-
-    user = {
-      phone: phone,
-      name: document.getElementById('name').value,
-      email: document.getElementById('email').value,
-      office: document.getElementById('house').value,
-      nationality: document.getElementById('nationality').value,
-      bankName: document.getElementById('bankName').value,
-      bankAcc: accountNumber,
-      cbdcBalance: 1000000000000,
-      bankBalance: bankBal,
-      transactions: []
     };
 
-    sendSMS(phone, `Welcome ${user.name}. R1,000,000,000,000 CBDC credited.`);
-    alert('Treasury Registered Successfully!');
-    showDashboard();
-  }
-
-  function login() {
-    const code = document.getElementById('countryCode').value;
-    const phone = code + document.getElementById('phone').value.trim();
-
-    if (user && user.phone === phone) {
-      showDashboard();
-    } else {
-      alert('User not found. Please register.');
-    }
-  }
-
-  function showDashboard() {
-    document.getElementById('auth').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-
-    document.getElementById('userPhone').innerText = user.phone;
-    document.getElementById('userName').innerText = `${user.name} (${user.nationality})`;
-    document.getElementById('linkedBank').innerText = `${user.bankName} ${user.bankAcc}`;
-    updateBalances();
-    renderTransactions();
-  }
-
-  async function transferToBank() {
-    const amount = parseFloat(document.getElementById('transferAmount').value);
-    if (isNaN(amount) || amount <= 0) return alert('Enter a valid amount.');
-    if (amount > user.cbdcBalance) return alert('Insufficient CBDC funds.');
-
-    const tax = amount * 0.15;
-    const gasFee = 0.001; // simulated
-    const netAmount = amount - tax;
-
-    user.cbdcBalance -= amount;
-    user.bankBalance += netAmount;
-
-    const txID = generateTrackingID();
-    user.transactions.push({ type: "Transfer", amount, tax, gasFee, netAmount, txID, date: new Date().toLocaleString() });
-
-    sendSMS(user.phone, `R${amount.toLocaleString()} transferred to bank. R${tax.toLocaleString()} tax deducted.`);
-
-    // simulate sending tax to MetaMask wallet
-    if (wallet) {
-      console.log(`Sent R${(tax + gasFee).toFixed(2)} in tax + gas fee to wallet ${wallet}`);
-    }
-
-    updateBalances();
-    renderTransactions();
-    generateQRCode(txID);
-    alert('Transfer successful.');
-  }
-
-  function renderTransactions() {
-    const txContainer = document.getElementById('transactions');
-    txContainer.innerHTML = "";
-    user.transactions.forEach(tx => {
-      txContainer.innerHTML += `<p><b>${tx.txID}</b><br>${tx.date}<br>${tx.type}: R${tx.amount.toLocaleString()}<br>Tax: R${tx.tax?.toFixed(2)}<br>Net: R${tx.netAmount?.toFixed(2)}</p>`;
-    });
-  }
-
-  function generateQRCode(data) {
-    document.getElementById("qrcode").innerHTML = "";
-    new QRCode(document.getElementById("qrcode"), {
-      text: data,
-      width: 180,
-      height: 180
-    });
-  }
-
-  function downloadPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    doc.text(`Transaction History for ${user.name}`, 10, 10);
-    user.transactions.forEach((tx, i) => {
-      doc.text(`${i+1}. ${tx.date} | ${tx.type} | Amount: R${tx.amount} | Tax: R${tx.tax?.toFixed(2)} | Net: R${tx.netAmount?.toFixed(2)} | ID: ${tx.txID}`, 10, 20 + i * 10);
-    });
-    doc.save("CBDC_Transaction_Report.pdf");
+    reader.readAsText(file);
   }
 </script>
 
 </body>
 </html>
-
-
