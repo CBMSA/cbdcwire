@@ -2,215 +2,208 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>SADC CBDC Portal</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SADC CBDC Interbank Settlement Platform</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      margin: 30px;
-      background: #f0f0f0;
+      background-color: #f4f6f9;
+      font-family: 'Segoe UI', sans-serif;
     }
-    input, select, button {
-      padding: 8px;
-      margin: 5px;
+    .container {
+      margin-top: 40px;
+      max-width: 600px;
     }
-    #dashboard {
-      display: none;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
+    #qrcode {
+      margin-top: 10px;
+    }
+    .card {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+      border-radius: 15px;
+    }
+    .header-logos img {
+      height: 60px;
+      margin-right: 15px;
     }
   </style>
 </head>
 <body>
-
-  <h2>SADC CBDC Web3 Wallet</h2>
-
-  <!-- Authentication Panel -->
-  <div id="auth">
-    <h3>Register</h3>
-    <input type="text" id="name" placeholder="Full Name"><br>
-    <input type="text" id="email" placeholder="Email"><br>
-    <input type="text" id="phone" placeholder="Phone Number"><br>
-    <input type="text" id="bankName" placeholder="Bank Name"><br>
-    <input type="text" id="bankAcc" placeholder="Bank Account"><br>
-    <button onclick="register()">Register</button>
-    <button onclick="login()">Login</button>
+  <div class="container" id="loginSection">
+    <div class="card p-4">
+      <div class="text-center">
+        <div class="header-logos mb-3">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/South_African_Reserve_Bank_Logo.svg/2560px-South_African_Reserve_Bank_Logo.svg.png" alt="SARB Logo">
+          <img src="https://www.sadc.int/sites/default/files/images/sadc_logo.png" alt="SADC Logo">
+        </div>
+        <h3 class="mb-4">SADC CBDC Login</h3>
+        <input type="text" id="username" class="form-control mb-2" placeholder="Username" required>
+        <input type="password" id="password" class="form-control mb-3" placeholder="Password" required>
+        <button class="btn btn-primary w-100" onclick="login()">Login</button>
+        <div id="loginError" class="text-danger mt-2" style="display: none;">Invalid credentials</div>
+      </div>
+    </div>
   </div>
 
-  <!-- Dashboard Panel -->
-  <div id="dashboard">
-    <h3>Welcome <span id="userName"></span> 📱</h3>
-    <p><strong>Phone:</strong> <span id="userPhone"></span></p>
-    <p><strong>CBDC Balance:</strong> R<span id="cbdcBalance"></span></p>
-    <p><strong>Bank:</strong> <span id="linkedBank"></span></p>
-    <p><strong>Bank Balance:</strong> R<span id="bankBalance"></span></p>
-    <p><strong>Connected Wallet:</strong> <span id="walletAddress"></span></p>
+  <div class="container" id="platformSection" style="display: none;">
+    <div class="text-center mb-4">
+      <div class="header-logos mb-3">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/South_African_Reserve_Bank_Logo.svg/2560px-South_African_Reserve_Bank_Logo.svg.png" alt="SARB Logo">
+        <img src="https://www.sadc.int/sites/default/files/images/sadc_logo.png" alt="SADC Logo">
+      </div>
+      <h2 class="mt-2">SADC CBDC Interbank Settlement Platform</h2>
+      <button class="btn btn-outline-danger mt-2" onclick="logout()">Logout</button>
+    </div>
 
-    <h4>Transfer to Bank</h4>
-    <input type="number" id="transferAmount" placeholder="Amount in ZAR">
-    <button onclick="transferToBank()">Send to Bank</button>
+    <form id="settlementForm" class="card p-4">
+      <div class="mb-3">
+        <label for="treasuryName" class="form-label">Treasury Department</label>
+        <input type="text" class="form-control" id="treasuryName" required>
+      </div>
+      <div class="mb-3">
+        <label for="amount" class="form-label">Amount (ZAR)</label>
+        <input type="number" class="form-control" id="amount" required>
+      </div>
+      <div class="mb-3">
+        <label for="recipientBank" class="form-label">Recipient Commercial Bank</label>
+        <input type="text" class="form-control" id="recipientBank" required>
+      </div>
+      <div class="mb-3">
+        <button type="button" class="btn btn-secondary" onclick="connectWallet()">Connect Wallet</button>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Initiate Settlement</button>
+    </form>
 
-    <h4>MetaMask</h4>
-    <button onclick="connectMetaMask()">Connect MetaMask</button>
+    <div id="result" class="mt-4"></div>
+    <div id="qrcode" class="mt-3"></div>
+    <button class="btn btn-success mt-3" onclick="generatePDF()">Download PDF Report</button>
 
-    <h4>SWIFT BIC Lookup</h4>
-    <input type="text" id="bicInput" placeholder="Enter SWIFT/BIC Code">
-    <button onclick="lookupBIC()">Lookup</button>
-    <div id="bicResult" style="margin-top:10px; border:1px solid #ccc; padding:10px;"></div>
-
-    <h4>Transaction History</h4>
-    <div id="transactions" style="border: 1px solid #ccc; padding: 10px;"></div>
+    <h4 class="mt-5">Transaction History</h4>
+    <ul id="txHistory" class="list-group"></ul>
   </div>
 
-  <!-- JavaScript Logic -->
   <script>
-    let user = null;
-    let walletAddress = null;
+    let web3;
+    let account;
+    let transactions = [];
 
-    async function register() {
-      const name = document.getElementById("name")?.value || "User";
-      const email = document.getElementById("email").value;
-      const phone = document.getElementById("phone").value;
-      const bankName = document.getElementById("bankName").value;
-      const bankAcc = document.getElementById("bankAcc").value;
+    function login() {
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
 
-      if (!email || !phone || !bankName || !bankAcc) {
-        alert("Please fill in all fields.");
-        return;
+      // Dummy credentials
+      if (user === 'admin' && pass === 'cbdc2025') {
+        localStorage.setItem('authenticated', 'true');
+        showPlatform();
+      } else {
+        document.getElementById('loginError').style.display = 'block';
       }
-
-      user = {
-        name,
-        email,
-        phone,
-        bankName,
-        bankAcc,
-        cbdcBalance: 1500000000000,
-        bankBalance: 0,
-        transactions: []
-      };
-
-      alert("Registration successful. Please login.");
     }
 
-    async function login() {
-      if (!user) {
-        alert("Please register first.");
-        return;
-      }
-
-      document.getElementById("auth").style.display = "none";
-      document.getElementById("dashboard").style.display = "block";
-
-      document.getElementById("userPhone").innerText = user.phone;
-      document.getElementById("userName").innerText = user.name;
-      document.getElementById("cbdcBalance").innerText = user.cbdcBalance.toLocaleString();
-      document.getElementById("linkedBank").innerText = user.bankName;
-      document.getElementById("bankBalance").innerText = user.bankBalance.toLocaleString();
-      document.getElementById("walletAddress").innerText = walletAddress || "Not Connected";
+    function logout() {
+      localStorage.removeItem('authenticated');
+      document.getElementById('platformSection').style.display = 'none';
+      document.getElementById('loginSection').style.display = 'block';
     }
 
-    async function connectMetaMask() {
-      if (typeof window.ethereum !== 'undefined') {
+    function showPlatform() {
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('platformSection').style.display = 'block';
+    }
+
+    window.onload = () => {
+      if (localStorage.getItem('authenticated') === 'true') {
+        showPlatform();
+      }
+    };
+
+    async function connectWallet() {
+      if (window.ethereum) {
+        web3 = new Web3(window.ethereum);
         try {
-          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          walletAddress = accounts[0];
-          alert("MetaMask connected: " + walletAddress);
-          document.getElementById("walletAddress").innerText = walletAddress;
-
-          if (user && user.cbdcBalance > 0) {
-            alert("Transferring entire CBDC budget to your MetaMask wallet (simulated).");
-
-            user.transactions.push({
-              type: "CBDC to MetaMask",
-              amount: user.cbdcBalance,
-              to: walletAddress
-            });
-
-            user.cbdcBalance = 0;
-            document.getElementById("cbdcBalance").innerText = "0";
-            updateTransactionHistory();
-          }
-
-        } catch (err) {
-          alert("MetaMask connection failed.");
+          const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+          account = accounts[0];
+          alert('Wallet connected: ' + account);
+        } catch (error) {
+          alert('Wallet connection failed');
         }
       } else {
-        alert("MetaMask not detected.");
+        alert('Please install MetaMask to use this feature');
       }
     }
 
-    function transferToBank() {
-      const amount = parseFloat(document.getElementById("transferAmount").value);
-      if (!amount || amount <= 0) {
-        alert("Enter a valid amount.");
-        return;
-      }
+    function mockBlockchainTransaction(treasury, recipient, amount) {
+      const gasFee = amount * 0.01;
+      const tax = amount * 0.02;
+      const total = amount + gasFee + tax;
+      return { gasFee, tax, total };
+    }
 
-      if (amount > user.cbdcBalance) {
-        alert("Insufficient CBDC balance.");
-        return;
-      }
+    function mockSendToCGIMP(transaction) {
+      console.log("Sending to CGI-MP:", transaction);
+    }
 
-      user.cbdcBalance -= amount;
-      user.bankBalance += amount;
+    function mockSendToRTGS(transaction) {
+      console.log("Sending to SADC-RTGS:", transaction);
+    }
 
-      user.transactions.push({
-        type: "CBDC to Bank",
+    function addTransactionToHistory(transaction) {
+      transactions.push(transaction);
+      const li = document.createElement('li');
+      li.className = 'list-group-item';
+      li.textContent = `${transaction.timestamp} - ${transaction.treasury} sent ZAR ${transaction.amount} to ${transaction.recipient}. Total: ZAR ${transaction.total.toFixed(2)}`;
+      document.getElementById('txHistory').appendChild(li);
+    }
+
+    function updateQRCode(data) {
+      document.getElementById("qrcode").innerHTML = "";
+      new QRCode(document.getElementById("qrcode"), JSON.stringify(data));
+    }
+
+    async function generatePDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.text("SADC CBDC Interbank Settlement Report", 10, 10);
+
+      transactions.forEach((tx, i) => {
+        doc.text(`${i + 1}. ${tx.timestamp} | ${tx.treasury} -> ${tx.recipient} | ZAR ${tx.amount} | Tax: ZAR ${tx.tax.toFixed(2)} | Gas: ZAR ${tx.gasFee.toFixed(2)} | Total: ZAR ${tx.total.toFixed(2)}`, 10, 20 + (i * 10));
+      });
+
+      doc.save("CBDC_Settlement_Report.pdf");
+    }
+
+    document.getElementById('settlementForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const treasury = document.getElementById('treasuryName').value;
+      const amount = parseFloat(document.getElementById('amount').value);
+      const recipient = document.getElementById('recipientBank').value;
+      const timestamp = new Date().toLocaleString();
+
+      const tx = mockBlockchainTransaction(treasury, recipient, amount);
+      const transaction = {
+        treasury,
+        recipient,
         amount,
-        to: user.bankAcc
-      });
-
-      document.getElementById("cbdcBalance").innerText = user.cbdcBalance.toLocaleString();
-      document.getElementById("bankBalance").innerText = user.bankBalance.toLocaleString();
-      updateTransactionHistory();
-    }
-
-    function updateTransactionHistory() {
-      const txDiv = document.getElementById("transactions");
-      txDiv.innerHTML = "";
-      user.transactions.forEach(tx => {
-        const p = document.createElement("p");
-        p.innerText = `${tx.type}: R${tx.amount.toLocaleString()} → ${tx.to}`;
-        txDiv.appendChild(p);
-      });
-    }
-
-    function lookupBIC() {
-      const bic = document.getElementById("bicInput").value.trim().toUpperCase();
-      const resultDiv = document.getElementById("bicResult");
-
-      if (!bic || bic.length < 8) {
-        resultDiv.innerText = "Please enter a valid SWIFT/BIC code (minimum 8 characters).";
-        return;
-      }
-
-      const bicDirectory = {
-        "SBZAZAJJ": { bank: "Standard Bank South Africa", country: "South Africa", city: "Johannesburg" },
-        "CABLZAJJ":{ bank: "Capitec Bank South Africa", country: "South Africa", city: "Johannesburg" },
-        "ABSAZAJJ": { bank: "ABSA Bank", country: "South Africa", city: "Johannesburg" },
-        "FIRNZAJJ": { bank: "FirstRand Bank (FNB)", country: "South Africa", city: "Sandton" },
-        "NEDSZAJJ": { bank: "Nedbank", country: "South Africa", city: "Johannesburg" },
-        "BARCGB22": { bank: "Barclays", country: "United Kingdom", city: "London" },
-        "CITIGB2L": { bank: "Citibank UK", country: "United Kingdom", city: "London" }
+        ...tx,
+        timestamp,
+        wallet: account || 'N/A'
       };
 
-      const info = bicDirectory[bic];
-      if (info) {
-        resultDiv.innerHTML = `
-          <strong>Bank:</strong> ${info.bank}<br>
-          <strong>Country:</strong> ${info.country}<br>
-          <strong>City:</strong> ${info.city}
-        `;
-      } else {
-        resultDiv.innerText = "BIC code not found in directory.";
-      }
-    }
-  </script>
+      mockSendToCGIMP(transaction);
+      mockSendToRTGS(transaction);
+      addTransactionToHistory(transaction);
+      updateQRCode(transaction);
 
+      document.getElementById("result").innerHTML = `
+        <div class='alert alert-success'>
+          Settlement complete. ZAR ${amount} + Tax: ZAR ${tx.tax.toFixed(2)} + Gas: ZAR ${tx.gasFee.toFixed(2)} = ZAR ${tx.total.toFixed(2)}
+        </div>
+      `;
+    });
+  </script>
 </body>
 </html>
-
-
 
